@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zing URL Zone</title>
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/static/favicon-96x96.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/static/site.webmanifest" />
+  <meta name="theme-color" content="#343434" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <span class="app-logo">
+        <img src="/static/favicon-96x96.png" alt="Zing" width="20" height="20" style="border-radius:4px" />
+      </span>
+      <span class="app-name">Zing URL Zone</span>
+    </div>
+
+    <!-- Global random panel -->
+    <div class="sidebar-random-panel">
+      <div class="random-panel-row">
+        <button id="btn-new-collection" class="btn btn-primary">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>New
+    </button>
+        <button id="btn-open-random" class="btn btn-outline" style="flex:1;justify-content:center" disabled>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+            <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+          </svg>
+          Open 7
+        </button>
+        <button id="btn-private-toggle" class="btn btn-toggle active" title="Private ON">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </button>
+         
+      </div>
+      <div class="random-panel-row">
+        <span class="random-panel-label">From:</span>
+        <div class="random-col-picker" id="random-col-picker">
+          <button class="random-col-picker-btn" id="btn-col-picker">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span id="col-picker-label">All collections</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="col-picker-dropdown" id="col-picker-dropdown">
+            <!-- injected by JS -->
+          </div>
+        </div>
+        <button id="btn-reset-session" class="icon-btn" title="Reset session">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 1 0 .49-5.8"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-section-label">COLLECTIONS</div>
+    <nav id="collection-list"></nav>
+   
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+    <div id="empty-state" class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.2">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+      </svg>
+      <p>Select a collection or create one to get started</p>
+      <button class="btn btn-primary" id="btn-empty-new">Create Collection</button>
+    </div>
+
+    <div id="collection-view" class="hidden">
+      <!-- Topbar -->
+      <div class="collection-topbar">
+        <div class="collection-title-wrap">
+          <h1 id="col-title" class="collection-title" contenteditable="false" spellcheck="false"></h1>
+          <button id="btn-edit-name" class="icon-btn" title="Rename">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <span id="col-count" class="count-badge"></span>
+        </div>
+        <div class="topbar-actions">
+          <div class="view-toggle">
+            <button id="btn-grid" class="icon-btn" title="Grid view">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+            <button id="btn-list" class="icon-btn active" title="List view">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <button id="btn-delete-col" class="icon-btn danger" title="Delete collection">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <span class="filter-label">Sort</span>
+        <div class="filter-group filter-popover-wrap" id="sort-popover-wrap">
+          <button class="filter-popover-btn" id="btn-sort">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/>
+            </svg>
+            <span id="sort-label">Latest</span>
+          </button>
+          <div class="filter-popover" id="sort-popover">
+            <div class="sort-option selected" data-sort="latest">
+              <svg class="sort-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Latest added
+            </div>
+            <div class="sort-option" data-sort="oldest">
+              <svg class="sort-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Oldest added
+            </div>
+            <div class="sort-option" data-sort="most-opened">
+              <svg class="sort-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Most opened
+            </div>
+          </div>
+        </div>
+
+        <span class="filter-label" style="margin-left:6px">Filter</span>
+        <div class="filter-group filter-popover-wrap" id="site-filter-wrap">
+          <button class="filter-popover-btn" id="btn-site-filter">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            <span id="site-filter-label">Sites</span>
+          </button>
+          <div class="filter-popover" id="site-filter-popover">
+            <!-- injected by JS -->
+          </div>
+        </div>
+
+        <div id="active-filters-row" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"></div>
+        <button id="btn-clear-filters" class="btn-clear-filters hidden">Clear filters</button>
+
+        <div style="flex:1"></div>
+        <div class="paste-hint" style="border:none;padding:0;background:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+          </svg>
+          <kbd>Ctrl+V</kbd> to paste
+        </div>
+      </div>
+
+      <div id="url-container"></div>
+    </div>
+  </main>
+
+  <!-- MODALS -->
+  <div id="modal-new-col" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>New Collection</h2>
+        <button class="icon-btn modal-close" data-modal="modal-new-col">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <input id="input-new-col-name" type="text" class="input" placeholder="Collection name" maxlength="80" />
+      <div style="margin-top:4px">
+        <input id="input-new-col-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+          class="input" placeholder="6-digit PIN (optional — leave blank for no lock)" autocomplete="off" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost modal-close" data-modal="modal-new-col">Cancel</button>
+        <button id="btn-create-col" class="btn btn-primary">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNLOCK COLLECTION MODAL -->
+  <div id="modal-unlock" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Unlock Collection
+        </h2>
+      </div>
+      <p class="modal-body-text" id="unlock-col-name" style="font-weight:600;color:var(--text)"></p>
+      <input id="input-unlock-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+        class="input" placeholder="Enter 6-digit PIN" autocomplete="off" />
+      <p id="unlock-error" style="font-size:0.75rem;color:var(--danger);display:none">Incorrect PIN. Try again.</p>
+      <div class="modal-footer">
+        <button class="btn btn-ghost modal-close" data-modal="modal-unlock">Cancel</button>
+        <button id="btn-confirm-unlock" class="btn btn-primary">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-confirm-delete" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header"><h2>Delete Collection?</h2></div>
+      <p class="modal-body-text">This will permanently remove the collection and all its URLs.</p>
+      <div id="delete-pin-wrap" class="hidden" style="margin-top:10px">
+        <input id="input-delete-pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+          class="input" placeholder="Enter 6-digit PIN to confirm" autocomplete="off" />
+        <p id="delete-pin-error" style="font-size:0.75rem;color:var(--danger);margin-top:4px;display:none"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost modal-close" data-modal="modal-confirm-delete">Cancel</button>
+        <button id="btn-confirm-delete" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-bulk-delete" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header"><h2>Delete <span id="bulk-del-count">0</span> URLs?</h2></div>
+      <p class="modal-body-text">This will permanently remove the selected URLs.</p>
+      <div class="modal-footer">
+        <button class="btn btn-ghost modal-close" data-modal="modal-bulk-delete">Cancel</button>
+        <button id="btn-confirm-bulk-delete" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELECTION BAR -->
+  <div id="selection-bar" class="selection-bar hidden">
+    <span id="selection-count" class="selection-bar-count">0 selected</span>
+    <button id="btn-delete-selected" class="btn btn-danger">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      </svg>
+      Delete selected
+    </button>
+    <button id="btn-clear-selection" class="btn btn-ghost">Cancel</button>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <div id="loading-overlay" class="hidden">
+    <div class="spinner"></div>
+    <span id="loading-text">Please wait…</span>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js').catch(() => {});
+    }
+  </script>
+</body>
+</html>
