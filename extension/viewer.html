@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Viewer — Zing</title>
+  <link rel="stylesheet" href="viewer.css" />
+ </head>
+<body>
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <div class="tb-brand">
+      <img src="icon128.png" alt="Zing" class="tb-brand-logo" />
+      <span class="tb-brand-name">Zing</span>
+      <span class="tb-brand-sep">·</span>
+      <span class="tb-brand-sub">JSON Viewer</span>
+    </div>
+
+    <div class="tb-right">
+      <!-- Search -->
+      <div id="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search" placeholder="Search…" autocomplete="off" spellcheck="false" />
+        <span id="search-count"></span>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="tb-btns">
+        <button id="btn-expand" class="tb-btn" title="Expand all">Expand all</button>
+        <button id="btn-collapse" class="tb-btn" title="Collapse all">Collapse all</button>
+        <button id="btn-copy-all" class="tb-btn" title="Copy JSON">Copy JSON</button>
+        <button id="btn-raw" class="tb-btn" title="Toggle tree / raw">Tree</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+    <div id="tree-view"></div>
+    <pre id="raw-view" style="display:none"></pre>
+  </div>
+
+  <!-- Status bar -->
+  <div id="status-bar">
+    <span id="status-type">—</span>
+    <span id="status-size">—</span>
+    <span id="status-url"></span>
+  </div>
+
+  <script src="viewer.js"></script>
+</body>
+</html>
