@@ -211,15 +211,27 @@ _og_thread.start()
 # Collection PIN store (in-memory; PINs also stored in bookmarks.json)
 # Unlock timestamps — collection is "unlocked" for LOCK_TIMEOUT seconds
 # ---------------------------------------------------------------------------
-LOCK_TIMEOUT = 120  # seconds
 _unlock_times: dict[str, float] = {}
+_lock_timeout_cache: int | None = None
+_lock_timeout_ts: float = 0.0
+
+
+def get_lock_timeout() -> int:
+    """Read lock timeout from settings with 60-second in-memory cache."""
+    global _lock_timeout_cache, _lock_timeout_ts
+    now = time.time()
+    if _lock_timeout_cache is None or now - _lock_timeout_ts > 60:
+        s = _load_settings()
+        _lock_timeout_cache = int(s.get('collectionLockTimeout', 120))
+        _lock_timeout_ts = now
+    return _lock_timeout_cache
 
 
 def _is_unlocked(cid: str) -> bool:
     t = _unlock_times.get(cid)
     if t is None:
         return False
-    if time.time() - t < LOCK_TIMEOUT:
+    if time.time() - t < get_lock_timeout():
         return True
     _unlock_times.pop(cid, None)
     return False
@@ -339,7 +351,8 @@ def set_pin(cid: str):
     col["pin"] = pin if pin else None
     _save(data)
     if pin:
-        _unlock_times[cid] = time.time()  # setting new PIN keeps session unlocked
+        # setting new PIN keeps session unlocked
+        _unlock_times[cid] = time.time()
     else:
         _unlock_times.pop(cid, None)
     return jsonify({"ok": True})
@@ -565,6 +578,9 @@ def og_preview():
 SETTINGS_FILE = os.path.join(DATA_DIR, 'settings.json')
 
 DEFAULT_SETTINGS = {
+    "profile": {
+        "username": ""
+    },
     "jsonPrettify": {
         "enabledByDefault": True
     },
@@ -575,9 +591,15 @@ DEFAULT_SETTINGS = {
         "hourFormat": "24"
     },
     "historyScrub": {
+        "enabled": True,
         "words": ["porn", "desi", "xxx", "sex", "fuck", "milf", "pornhub",
                   "xvideos", "missionary", "eporner", "hardcore"],
         "frequency": "startup"
+    },
+    "collectionLockTimeout": 120,
+    "softRefreshInterval": 30,
+    "viewedOverlay": {
+        "domains": []
     }
 }
 
@@ -603,6 +625,8 @@ def _load_settings() -> dict:
 
 
 def _save_settings(settings: dict) -> None:
+    global _lock_timeout_cache
+    _lock_timeout_cache = None  # invalidate cache so next call re-reads
     os.makedirs(DATA_DIR, exist_ok=True)
     tmp = SETTINGS_FILE + ".tmp"
     with open(tmp, 'w', encoding='utf-8') as f:
@@ -735,52 +759,28 @@ def open_random_global():
 @app.route("/api/open-url", methods=["POST"])
 def open_single_url():
     body = request.get_json(force=True)
-    url = body.get("url",           "").strip()
-    cid = body.get("collection_id", "").strip()
-    uid = body.get("url_id",        "").strip()
-
+    url = (body.get("url") or "").strip()
+    url_id = (body.get("url_id") or "").strip()
+    cid = (body.get("collection_id") or "").strip()
+    private_mode = body.get("private", True)
     if not url:
         abort(400, "url required")
-
-    error = None
-    try:
-        subprocess.Popen([BRAVE_PATH, "--incognito", url])
-    except FileNotFoundError:
-        error = "brave_not_found"
-
-    if uid:
-        session_opened.add(uid)
-    if cid and uid:
+    if url_id:
+        session_opened.add(url_id)
+    if cid and url_id:
         data = _load()
         col = _find_collection(data, cid)
         if col:
-            _mark_opened_and_reorder(col, [uid])
+            _mark_opened_and_reorder(col, [url_id])
             _save(data)
-
-    if error:
-        return jsonify({
-            "error":   error,
-            "message": f"Brave not found at: {BRAVE_PATH}.",
-            "opened":  uid,
-        })
-    return jsonify({"ok": True, "opened": uid})
-
-
-# ---------------------------------------------------------------------------
-# Routes — session
-# ---------------------------------------------------------------------------
-
-@app.route("/api/locks/reset-all", methods=["POST"])
-def reset_all_locks():
-    _unlock_times.clear()
+    incognito_flag = "--incognito" if private_mode else None
+    cmd = [BRAVE_PATH] + ([incognito_flag] if incognito_flag else []) + [url]
+    try:
+        subprocess.Popen(cmd)
+    except FileNotFoundError:
+        return jsonify({"ok": True, "error": "brave_not_found",
+                        "message": f"Brave not found at: {BRAVE_PATH}."})
     return jsonify({"ok": True})
-
-
-@app.route("/api/session/reset", methods=["POST"])
-def reset_session():
-    session_opened.clear()
-    _unlock_times.clear()
-    return jsonify({"ok": True, "message": "Session reset. All URLs are eligible again."})
 
 
 @app.route("/api/session/status", methods=["GET"])
@@ -788,21 +788,74 @@ def session_status():
     return jsonify({"opened_ids": list(session_opened)})
 
 
+@app.route("/api/session/reset", methods=["POST"])
+def session_reset():
+    session_opened.clear()
+    return jsonify({"ok": True})
+
+
+@app.route("/api/locks/reset-all", methods=["POST"])
+def locks_reset_all():
+    _unlock_times.clear()
+    return jsonify({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Routes — Settings
 # ---------------------------------------------------------------------------
 
-if __name__ == "__main__":
+SETTINGS_FILE = os.path.join(DATA_DIR, 'settings.json')
+
+DEFAULT_SETTINGS = {
+    "profile": {"username": ""},
+    "jsonPrettify": {"enabledByDefault": True},
+    "dateTime": {
+        "useSystemSettings": True,
+        "timezone": "UTC",
+        "dateFormat": "D MMM YYYY",
+        "hourFormat": "24"
+    },
+    "historyScrub": {
+        "enabled": True,
+        "words": ["porn", "desi", "xxx", "sex", "fuck", "milf", "pornhub",
+                  "xvideos", "missionary", "eporner", "hardcore"],
+        "frequency": "startup"
+    },
+    "collectionLockTimeout": 120,
+    "softRefreshInterval": 30,
+    "viewedOverlay": {"domains": []}
+}
+
+
+def _load_settings() -> dict:
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, 'r', encoding='utf-8') as f:
+                stored = json.load(f)
+            result = {k: dict(v) if isinstance(v, dict) else v
+                      for k, v in DEFAULT_SETTINGS.items()}
+            for k, v in stored.items():
+                if isinstance(v, dict) and isinstance(result.get(k), dict):
+                    result[k] = {**result[k], **v}
+                else:
+                    result[k] = v
+            return result
+        except Exception:
+            pass
+    return {k: dict(v) if isinstance(v, dict) else v
+            for k, v in DEFAULT_SETTINGS.items()}
+
+
+def _save_settings(settings: dict) -> None:
+    global _lock_timeout_cache
+    _lock_timeout_cache = None
     os.makedirs(DATA_DIR, exist_ok=True)
-    if not os.path.exists(DATA_FILE):
-        _write_file({"collections": []})
+    tmp = SETTINGS_FILE + ".tmp"
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, indent=2)
+    os.replace(tmp, SETTINGS_FILE)
 
-    # Re-queue any URLs that were pending OG fetch when the server last shut down
-    try:
-        data = _load()
-        for col in data["collections"]:
-            for u in col["urls"]:
-                if u.get("og_fetched") is False:
-                    og_queue.put((col["id"], u["id"]))
-    except Exception:
-        pass
 
-    app.run(debug=True, port=5000, use_reloader=False)
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)
