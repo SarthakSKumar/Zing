@@ -52,9 +52,9 @@
     const btn = document.createElement("button");
     btn.textContent = "copy";
     btn.style.cssText =
-      "background:#1a1a1e!important;border:1px solid #27272a!important;border-radius:3px!important;" +
-      "color:#71717a!important;cursor:pointer!important;font:500 9.5px/1 system-ui,sans-serif!important;" +
-      "padding:2px 5px!important;transition:color .1s,border-color .1s!important;flex-shrink:0!important;";
+      "background:#111113!important;border:1px solid #27272a!important;border-radius:5px!important;" +
+      "color:#71717a!important;cursor:pointer!important;font:500 11px/1 'BG',-apple-system,system-ui,sans-serif!important;" +
+      "padding:3px 8px!important;transition:color .12s,border-color .12s!important;flex-shrink:0!important;";
     btn.addEventListener("mouseenter", () => {
       btn.style.color = "#d4d4d8!important";
     });
@@ -94,7 +94,7 @@
 
     const lbl = document.createElement("span");
     lbl.style.cssText =
-      "font-size:10px!important;text-transform:uppercase!important;letter-spacing:.06em!important;color:#52525b!important;font-weight:600!important";
+      "font-size:10px!important;text-transform:uppercase!important;letter-spacing:.08em!important;color:#3f3f46!important;font-weight:700!important";
     lbl.textContent = label;
 
     const row = document.createElement("div");
@@ -103,7 +103,7 @@
 
     const v = document.createElement("span");
     v.style.cssText =
-      "font-size:12px!important;color:#a1a1aa!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;flex:1!important;min-width:0!important";
+      "font-size:12px!important;color:#a1a1aa!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;flex:1!important;min-width:0!important;font-family:'BG',-apple-system,sans-serif!important";
     v.textContent = val || "—";
 
     row.appendChild(v);
@@ -135,23 +135,23 @@
     t.id = "__zing-font-tip";
     t.style.cssText =
       "position:fixed!important;z-index:2147483647!important;" +
-      "background:#09090b!important;color:#a1a1aa!important;" +
-      'font:400 13px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif!important;' +
-      "padding:11px 13px!important;border-radius:10px!important;" +
-      "border:1px solid #27272a!important;box-shadow:0 10px 30px rgba(0,0,0,.7)!important;" +
-      "min-width:220px!important;max-width:300px!important;" +
+      "background:#0d0d0f!important;color:#a1a1aa!important;" +
+      "font:400 13px/1.5 'BG',-apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;" +
+      "padding:13px 14px!important;border-radius:10px!important;" +
+      "border:1px solid #27272a!important;box-shadow:0 12px 36px rgba(0,0,0,.75)!important;" +
+      "min-width:224px!important;max-width:308px!important;" +
       "pointer-events:auto!important;user-select:none!important;box-sizing:border-box!important;";
 
     // ── Header ────────────────────────────────────────────────────────────────
     const header = document.createElement("div");
     header.style.cssText =
       "display:flex!important;align-items:center!important;justify-content:space-between!important;" +
-      "margin-bottom:9px!important;border-bottom:1px solid #1a1a1e!important;padding-bottom:7px!important";
+      "margin-bottom:10px!important;border-bottom:1px solid #18181b!important;padding-bottom:8px!important";
 
     const brandEl = document.createElement("div");
     brandEl.style.cssText =
       "display:flex!important;align-items:center!important;gap:5px!important;" +
-      "font:700 11px/1 inherit!important;color:#71717a!important;text-transform:uppercase!important;letter-spacing:.07em!important";
+      "font:700 11px/1 inherit!important;color:#52525b!important;text-transform:uppercase!important;letter-spacing:.08em!important";
 
     if (iconUrl) {
       const img = document.createElement("img");
@@ -165,8 +165,8 @@
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "×";
     closeBtn.style.cssText =
-      "cursor:pointer!important;color:#52525b!important;font-size:16px!important;" +
-      "line-height:1!important;padding:0 2px!important;pointer-events:auto!important";
+      "cursor:pointer!important;color:#52525b!important;font-size:17px!important;" +
+      "line-height:1!important;padding:0!important;pointer-events:auto!important;background:none!important;border:none!important;";
     closeBtn.addEventListener("click", removeTooltip);
 
     header.appendChild(brandEl);
@@ -181,7 +181,7 @@
     const familyName = document.createElement("div");
     familyName.style.cssText =
       "color:#fafafa!important;font:700 15px/1 inherit!important;overflow:hidden!important;" +
-      "text-overflow:ellipsis!important;white-space:nowrap!important;flex:1!important;min-width:0!important";
+      "text-overflow:ellipsis!important;white-space:nowrap!important;flex:1!important;min-width:0!important;letter-spacing:-.01em!important";
     familyName.title = family;
     familyName.textContent = family;
 
@@ -192,7 +192,7 @@
     // ── Grid of properties ────────────────────────────────────────────────────
     const grid = document.createElement("div");
     grid.style.cssText =
-      "display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px 12px!important";
+      "display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px 14px!important";
     grid.appendChild(makeRow("Size", info.size));
     grid.appendChild(makeRow("Weight", wLabel));
     grid.appendChild(makeRow("Line Height", info.lineHeight));

@@ -1,535 +1,209 @@
-/* Zing — Content Script
-   Highlights page links already in your Zing bookmarks.
-   Also handles: color picker tool, pesticide ESC, relay for debugger. */
+/* Zing — Content Script */
 "use strict";
 
 const OVERLAY_ATTR = "data-zing-overlay";
-const LINK_ATTR = "data-zing-checked";
+const LINK_ATTR    = "data-zing-checked";
 let bookmarkedSlugs = new Set();
 let ready = false;
 
-// ─── Slug: pathname + search, no trailing slash, lowercase ───────────────────
-
 function slug(url) {
-  try {
-    const abs = new URL(url, location.href);
-    return (abs.pathname.replace(/\/$/, "") + abs.search).toLowerCase();
-  } catch {
-    return (url || "").replace(/\/$/, "").toLowerCase();
-  }
+  try { const a=new URL(url,location.href); return (a.pathname.replace(/\/$/,"")+a.search).toLowerCase(); }
+  catch { return (url||"").replace(/\/$/,"").toLowerCase(); }
 }
-
-// ─── Find best container div for the link ────────────────────────────────────
-
 function findCardDiv(link) {
-  let el = link.parentElement;
-  while (el && el !== document.body) {
-    if (
-      el.tagName === "DIV" ||
-      el.tagName === "LI" ||
-      el.tagName === "ARTICLE"
-    ) {
-      const r = el.getBoundingClientRect();
-      if (r.width > 60 && r.height > 60) return el;
-    }
-    el = el.parentElement;
+  let el=link.parentElement;
+  while(el&&el!==document.body){
+    if(["DIV","LI","ARTICLE"].includes(el.tagName)){const r=el.getBoundingClientRect();if(r.width>60&&r.height>60)return el;}
+    el=el.parentElement;
   }
   return link.closest("div");
 }
-
-// ─── Apply overlays to all matching links ────────────────────────────────────
-
 function applyOverlays() {
-  if (!ready || !bookmarkedSlugs.size) return;
-
-  document.querySelectorAll(`a[href]:not([${LINK_ATTR}])`).forEach((link) => {
-    const href = link.getAttribute("href");
-    if (!href || href === "#" || href.startsWith("javascript")) return;
-
-    link.setAttribute(LINK_ATTR, "1");
-    if (!bookmarkedSlugs.has(slug(href))) return;
-
-    const div = findCardDiv(link);
-    if (!div || div.hasAttribute(OVERLAY_ATTR)) return;
-    div.setAttribute(OVERLAY_ATTR, "1");
-
-    const pos = window.getComputedStyle(div).position;
-    if (pos === "static") div.style.position = "relative";
-
-    const overlay = document.createElement("div");
-    overlay.style.cssText = `
-      position: absolute !important;
-      inset: 0 !important;
-      background: rgba(245,158,11,0.20) !important;
-      z-index: 2147483640 !important;
-      pointer-events: none !important;
-      border: 1.5px solid rgba(245,158,11,0.50) !important;
-      border-radius: inherit !important;
-    `;
-
-    const badge = document.createElement("span");
-    badge.textContent = "VIEWED";
-    badge.style.cssText = `
-      position: absolute !important;
-      top: 4px !important;
-      right: 6px !important;
-      background: rgba(245,158,11,0.95) !important;
-      color: #000 !important;
-      font: 700 9px/1 sans-serif !important;
-      letter-spacing: 0.06em !important;
-      padding: 2px 5px !important;
-      border-radius: 3px !important;
-      pointer-events: none !important;
-      text-transform: uppercase !important;
-    `;
-    overlay.appendChild(badge);
-    div.appendChild(overlay);
+  if(!ready||!bookmarkedSlugs.size)return;
+  document.querySelectorAll(`a[href]:not([${LINK_ATTR}])`).forEach(link=>{
+    const href=link.getAttribute("href");
+    if(!href||href==="#"||href.startsWith("javascript"))return;
+    link.setAttribute(LINK_ATTR,"1");
+    if(!bookmarkedSlugs.has(slug(href)))return;
+    const div=findCardDiv(link);
+    if(!div||div.hasAttribute(OVERLAY_ATTR))return;
+    div.setAttribute(OVERLAY_ATTR,"1");
+    if(window.getComputedStyle(div).position==="static")div.style.position="relative";
+    const ov=document.createElement("div");
+    ov.style.cssText="position:absolute!important;inset:0!important;background:rgba(245,158,11,.2)!important;z-index:2147483640!important;pointer-events:none!important;border:1.5px solid rgba(245,158,11,.5)!important;border-radius:inherit!important;";
+    const b=document.createElement("span");
+    b.textContent="VIEWED";
+    b.style.cssText="position:absolute!important;top:4px!important;right:6px!important;background:rgba(245,158,11,.95)!important;color:#000!important;font:700 9px/1 sans-serif!important;letter-spacing:.06em!important;padding:2px 5px!important;border-radius:3px!important;pointer-events:none!important;text-transform:uppercase!important;";
+    ov.appendChild(b);div.appendChild(ov);
   });
 }
+function isRuntimeAlive(){try{return!!chrome.runtime?.id;}catch{return false;}}
 
-// ─── Safe chrome.runtime call ─────────────────────────────────────────────────
-
-function isRuntimeAlive() {
-  try {
-    return !!chrome.runtime?.id;
-  } catch {
-    return false;
-  }
+function loadBookmarks(force=false){
+  if(!isRuntimeAlive())return;
+  try{chrome.runtime.sendMessage({type:"GET_BOOKMARK_URLS",forceRefresh:force},resp=>{
+    if(chrome.runtime.lastError)return;
+    if(resp?.urls){bookmarkedSlugs=new Set(resp.urls.map(slug));ready=true;applyOverlays();}
+  });}catch{}
 }
 
-// ─── Load bookmarks via background worker ────────────────────────────────────
+const observer=new MutationObserver(()=>applyOverlays());
+function startObserver(){try{observer.observe(document.body,{childList:true,subtree:true});}catch{}}
 
-function loadBookmarks(forceRefresh = false) {
-  if (!isRuntimeAlive()) return;
-  try {
-    chrome.runtime.sendMessage(
-      { type: "GET_BOOKMARK_URLS", forceRefresh },
-      (resp) => {
-        if (chrome.runtime.lastError) return;
-        if (resp?.urls) {
-          bookmarkedSlugs = new Set(resp.urls.map(slug));
-          ready = true;
-          applyOverlays();
-        }
-      },
-    );
-  } catch {
-    // Extension context invalidated — stop gracefully
-  }
+// ── Domain-filtered init ──────────────────────────────────────────────────────
+// Only apply VIEWED overlays on domains in the allow-list (empty = all sites)
+function initOverlays() {
+  if(!isRuntimeAlive()){loadBookmarks();if(document.readyState==="complete")startObserver();else window.addEventListener("load",startObserver);return;}
+  try{
+    chrome.storage.local.get({viewedOverlayDomains:[]},({viewedOverlayDomains})=>{
+      const host = location.hostname.replace(/^www\./,"");
+      const allowed = viewedOverlayDomains.length===0 || viewedOverlayDomains.some(d=>{
+        const clean=(d||"").replace(/^(https?:\/\/)?(www\.)?/,"").replace(/\/.*$/,"").trim();
+        return clean&&(host===clean||host.endsWith("."+clean));
+      });
+      if(!allowed)return;
+      loadBookmarks();
+      if(document.readyState==="complete")startObserver();
+      else window.addEventListener("load",startObserver);
+    });
+  }catch{loadBookmarks();if(document.readyState==="complete")startObserver();else window.addEventListener("load",startObserver);}
 }
+initOverlays();
 
-// ─── MutationObserver for dynamic content ────────────────────────────────────
-
-const observer = new MutationObserver(() => applyOverlays());
-
-function startObserver() {
-  try {
-    observer.observe(document.body, { childList: true, subtree: true });
-  } catch {
-    // body not ready
-  }
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-
-loadBookmarks();
-if (document.readyState === "complete") {
-  startObserver();
-} else {
-  window.addEventListener("load", startObserver);
-}
-
-const _refreshTimer = setInterval(() => {
-  if (!isRuntimeAlive()) {
-    clearInterval(_refreshTimer);
-    observer.disconnect();
-    return;
-  }
+const _rt=setInterval(()=>{
+  if(!isRuntimeAlive()){clearInterval(_rt);observer.disconnect();return;}
   loadBookmarks(true);
-}, 60_000);
+},60_000);
 
-// ─── Pesticide inspect bridge: relay MAIN-world event → background → debugger ──
-
-document.addEventListener('__zing-pest-inspect', (e) => {
-  if (!isRuntimeAlive()) return;
-  try {
-    chrome.runtime.sendMessage({ type: 'INSPECT_ELEMENT', selector: e.detail?.selector || '' });
-  } catch {}
-});
-
-// ─── ESC key: disable any active Zing overlay tools ─────────────────────────
-
-document.addEventListener('keydown', function (e) {
-  if (e.key !== 'Escape') return;
-
-  // Pesticide ESC
-  if (window.__zingPesticideStop) {
+// ── ESC: stop active tools, notify background to clear storage + remove CSS ──
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  if(window.__zingPesticideStop){
     window.__zingPesticideStop();
-    if (isRuntimeAlive()) {
-      try {
-        chrome.runtime.sendMessage({ type: 'DISABLE_PESTICIDE' });
-      } catch {}
-    }
+    if(isRuntimeAlive())try{chrome.runtime.sendMessage({type:"CLEAR_PESTICIDE_STATE"});}catch{}
   }
-
-  // Color picker ESC
-  if (window.__zingColorPickerStop) {
+  if(window.__zingColorPickerStop){
     window.__zingColorPickerStop();
-    if (isRuntimeAlive()) {
-      try {
-        chrome.runtime.sendMessage({ type: 'DISABLE_COLOR_PICKER' });
-      } catch {}
+    if(isRuntimeAlive())try{chrome.runtime.sendMessage({type:"CLEAR_COLOR_PICKER_STATE"});}catch{}
+  }
+},true);
+
+// ── Color Picker ──────────────────────────────────────────────────────────────
+function __zingInjectColorPicker(){
+  if(window.__zingColorPickerActive){window.__zingColorPickerStop?.();return;}
+  window.__zingColorPickerActive=true;
+
+  function parseRgb(s){const m=s&&s.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);return m?{r:+m[1],g:+m[2],b:+m[3]}:null;}
+  function toHex(r,g,b){return"#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();}
+  function toHsl(r,g,b){
+    r/=255;g/=255;b/=255;
+    const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+    let h=0,s=0,l=(mx+mn)/2;
+    if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
+      if(mx===r)h=((g-b)/d+(g<b?6:0))/6;else if(mx===g)h=((b-r)/d+2)/6;else h=((r-g)/d+4)/6;}
+    return`hsl(${Math.round(h*360)}, ${Math.round(s*100)}%, ${Math.round(l*100)}%)`;
+  }
+  function getColorAt(x,y){
+    const els=document.elementsFromPoint(x,y);
+    for(const el of els){
+      if(el.id==="__zing-color-picker"||el.id==="__zing-color-popover")continue;
+      if(el.closest?.("#__zing-color-picker")||el.closest?.("#__zing-color-popover"))continue;
+      const bg=window.getComputedStyle(el).backgroundColor;
+      if(bg&&bg!=="rgba(0, 0, 0, 0)"&&bg!=="transparent"){const c=parseRgb(bg);if(c)return c;}
     }
-  }
-}, true);
-
-// ─── Color Picker injection function (called via executeScript) ───────────────
-// This is invoked via chrome.scripting.executeScript from popup.js
-
-function __zingInjectColorPicker() {
-  if (window.__zingColorPickerActive) {
-    window.__zingColorPickerStop?.();
-    return;
+    return{r:255,g:255,b:255};
   }
 
-  window.__zingColorPickerActive = true;
-
-  // ── Utility: parse rgb/rgba string ────────────────────────────────────────
-  function parseRgb(str) {
-    if (!str) return null;
-    const m = str.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
-    if (!m) return null;
-    return { r: +m[1], g: +m[2], b: +m[3] };
-  }
-
-  function toHex(r, g, b) {
-    return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
-  }
-
-  function toHsl(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-    if (max === min) { h = s = 0; }
-    else {
-      const d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      switch (max) {
-        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-        case g: h = ((b - r) / d + 2) / 6; break;
-        case b: h = ((r - g) / d + 4) / 6; break;
-      }
-    }
-    return `hsl(${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%)`;
-  }
-
-  // ── Get the effective background color at a point ─────────────────────────
-  function getColorAtPoint(x, y) {
-    // Get elements at point (from top)
-    const elements = document.elementsFromPoint(x, y);
-    for (const el of elements) {
-      if (el.id === '__zing-color-picker' || el.id === '__zing-color-popover') continue;
-      if (el.closest('#__zing-color-picker') || el.closest('#__zing-color-popover')) continue;
-      const st = window.getComputedStyle(el);
-      // Check background color
-      const bg = st.backgroundColor;
-      if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-        const c = parseRgb(bg);
-        if (c) return { ...c, source: 'bg' };
-      }
-      // Check text color if we're on a text node
-      const color = st.color;
-      if (color && el.textContent.trim()) {
-        const c = parseRgb(color);
-        if (c) return { ...c, source: 'text' };
-      }
-    }
-    // Default to white
-    return { r: 255, g: 255, b: 255, source: 'default' };
-  }
-
-  // ── Build the magnifier UI ────────────────────────────────────────────────
-  const picker = document.createElement('div');
-  picker.id = '__zing-color-picker';
-  Object.assign(picker.style, {
-    position: 'fixed',
-    zIndex: '2147483647',
-    pointerEvents: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '6px',
-    transform: 'translate(16px, 16px)',
-    userSelect: 'none',
-  });
-
-  // Magnifier circle
-  const loupe = document.createElement('div');
-  Object.assign(loupe.style, {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    border: '2px solid rgba(255,255,255,0.5)',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.3)',
-    background: '#ffffff',
-    position: 'relative',
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  });
-
-  // Crosshair inside loupe
-  const crossH = document.createElement('div');
-  Object.assign(crossH.style, {
-    position: 'absolute',
-    width: '100%',
-    height: '1px',
-    background: 'rgba(255,255,255,0.7)',
-    top: '50%',
-    left: '0',
-    transform: 'translateY(-50%)',
-    pointerEvents: 'none',
-  });
-  const crossV = document.createElement('div');
-  Object.assign(crossV.style, {
-    position: 'absolute',
-    width: '1px',
-    height: '100%',
-    background: 'rgba(255,255,255,0.7)',
-    left: '50%',
-    top: '0',
-    transform: 'translateX(-50%)',
-    pointerEvents: 'none',
-  });
-  // Center dot
-  const dot = document.createElement('div');
-  Object.assign(dot.style, {
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    border: '1.5px solid rgba(255,255,255,0.9)',
-    position: 'absolute',
-    zIndex: '1',
-  });
-  loupe.appendChild(crossH);
-  loupe.appendChild(crossV);
-  loupe.appendChild(dot);
-
-  // Hex label
-  const label = document.createElement('div');
-  Object.assign(label.style, {
-    background: 'rgba(9,9,11,0.92)',
-    color: '#fafafa',
-    fontSize: '11px',
-    fontFamily: 'monospace',
-    fontWeight: '600',
-    padding: '3px 8px',
-    borderRadius: '4px',
-    border: '1px solid rgba(255,255,255,0.12)',
-    letterSpacing: '0.05em',
-    whiteSpace: 'nowrap',
-    backdropFilter: 'blur(4px)',
-  });
-  label.textContent = '#FFFFFF';
-
-  picker.appendChild(loupe);
-  picker.appendChild(label);
+  const picker=document.createElement("div");
+  picker.id="__zing-color-picker";
+  Object.assign(picker.style,{position:"fixed",zIndex:"2147483647",pointerEvents:"none",
+    display:"flex",flexDirection:"column",alignItems:"center",gap:"6px",userSelect:"none",top:"0",left:"0"});
+  const loupe=document.createElement("div");
+  Object.assign(loupe.style,{width:"64px",height:"64px",borderRadius:"50%",
+    border:"2.5px solid rgba(255,255,255,.7)",
+    boxShadow:"0 4px 20px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.2)",
+    background:"#fff",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"});
+  const ch=document.createElement("div");ch.style.cssText="position:absolute;width:100%;height:1px;background:rgba(255,255,255,.6);top:50%;transform:translateY(-50%);pointer-events:none";
+  const cv=document.createElement("div");cv.style.cssText="position:absolute;width:1px;height:100%;background:rgba(255,255,255,.6);left:50%;transform:translateX(-50%);pointer-events:none";
+  const cdot=document.createElement("div");cdot.style.cssText="width:9px;height:9px;border-radius:50%;border:1.5px solid rgba(255,255,255,.95);position:absolute;z-index:1;box-shadow:0 1px 4px rgba(0,0,0,.4)";
+  loupe.append(ch,cv,cdot);
+  const lbl=document.createElement("div");
+  Object.assign(lbl.style,{background:"rgba(9,9,11,.95)",color:"#fafafa",fontSize:"12px",
+    fontFamily:"'SF Mono','Fira Code',monospace",fontWeight:"600",padding:"4px 10px",borderRadius:"6px",
+    border:"1px solid rgba(255,255,255,.1)",letterSpacing:".04em",whiteSpace:"nowrap",
+    boxShadow:"0 2px 8px rgba(0,0,0,.5)"});
+  lbl.textContent="#FFFFFF";
+  picker.append(loupe,lbl);
   document.documentElement.appendChild(picker);
+  document.documentElement.style.setProperty("cursor","crosshair","important");
 
-  // Change cursor
-  document.documentElement.style.setProperty('cursor', 'crosshair', 'important');
-
-  let currentColor = { r: 255, g: 255, b: 255 };
-
-  function onMouseMove(e) {
-    if (e.target === picker || picker.contains(e.target)) return;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    let tx = e.clientX + 20, ty = e.clientY + 20;
-    if (tx + 100 > vw) tx = e.clientX - 100;
-    if (ty + 100 > vh) ty = e.clientY - 100;
-    picker.style.left = tx + 'px';
-    picker.style.top = ty + 'px';
-    picker.style.transform = 'none';
-
-    const c = getColorAtPoint(e.clientX, e.clientY);
-    currentColor = c;
-    const hex = toHex(c.r, c.g, c.b);
-    loupe.style.background = hex;
-    label.textContent = hex;
+  let cc={r:255,g:255,b:255};
+  function onMove(e){
+    if(picker.contains(e.target))return;
+    let tx=e.clientX+24,ty=e.clientY+24;
+    if(tx+96>window.innerWidth)tx=e.clientX-96;
+    if(ty+100>window.innerHeight)ty=e.clientY-100;
+    picker.style.left=tx+"px";picker.style.top=ty+"px";
+    const c=getColorAt(e.clientX,e.clientY);cc=c;
+    const hex=toHex(c.r,c.g,c.b);loupe.style.background=hex;lbl.textContent=hex;
   }
-
-  function showPopover(e) {
-    if (e.target === picker || picker.contains(e.target)) return;
-    const c = currentColor;
-    const hex = toHex(c.r, c.g, c.b);
-    const hsl = toHsl(c.r, c.g, c.b);
-    const rgb = `rgb(${c.r}, ${c.g}, ${c.b})`;
-
-    // Build popover
-    const pop = document.createElement('div');
-    pop.id = '__zing-color-popover';
-    Object.assign(pop.style, {
-      position: 'fixed',
-      zIndex: '2147483647',
-      background: '#111113',
-      border: '1px solid #27272a',
-      borderRadius: '10px',
-      padding: '12px',
-      boxShadow: '0 8px 28px rgba(0,0,0,0.7)',
-      fontFamily: '"Bricolage Grotesque", -apple-system, sans-serif',
-      width: '220px',
-      userSelect: 'none',
-    });
-
-    // Position it
-    let px = e.clientX + 10, py = e.clientY + 10;
-    if (px + 240 > window.innerWidth) px = e.clientX - 240;
-    if (py + 160 > window.innerHeight) py = e.clientY - 160;
-    pop.style.left = px + 'px';
-    pop.style.top = py + 'px';
-
-    // Color swatch
-    const swatch = document.createElement('div');
-    Object.assign(swatch.style, {
-      width: '100%',
-      height: '48px',
-      borderRadius: '6px',
-      background: hex,
-      border: '1px solid rgba(255,255,255,0.08)',
-      marginBottom: '10px',
-    });
-
-    // Rows for each format
-    function makeRow(fmt, val) {
-      const row = document.createElement('div');
-      Object.assign(row.style, {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '4px 0',
-        borderTop: '1px solid #1e1e21',
-      });
-      const left = document.createElement('div');
-      Object.assign(left.style, { display: 'flex', flexDirection: 'column', gap: '1px' });
-      const fmtEl = document.createElement('span');
-      fmtEl.style.cssText = 'font-size:9px;font-weight:700;color:#3f3f46;text-transform:uppercase;letter-spacing:.06em';
-      fmtEl.textContent = fmt;
-      const valEl = document.createElement('span');
-      valEl.style.cssText = 'font-size:11.5px;font-weight:600;color:#d4d4d8;font-family:monospace';
-      valEl.textContent = val;
-      left.appendChild(fmtEl);
-      left.appendChild(valEl);
-
-      const copyBtn = document.createElement('button');
-      Object.assign(copyBtn.style, {
-        background: '#1e1e22',
-        border: '1px solid #27272a',
-        borderRadius: '5px',
-        color: '#71717a',
-        fontSize: '10px',
-        padding: '3px 7px',
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        transition: 'color 0.12s',
-      });
-      copyBtn.textContent = 'Copy';
-      copyBtn.addEventListener('click', () => {
-        navigator.clipboard.writeText(val).catch(() => {});
-        copyBtn.textContent = '✓';
-        setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1200);
-      });
-
-      row.appendChild(left);
-      row.appendChild(copyBtn);
-      return row;
+  function showPopover(e){
+    const c=cc,hex=toHex(c.r,c.g,c.b),hsl=toHsl(c.r,c.g,c.b),rgb=`rgb(${c.r}, ${c.g}, ${c.b})`;
+    document.getElementById("__zing-color-popover")?.remove();
+    const pop=document.createElement("div");pop.id="__zing-color-popover";
+    Object.assign(pop.style,{position:"fixed",zIndex:"2147483647",background:"#0d0d0f",
+      border:"1px solid #27272a",borderRadius:"12px",padding:"14px",
+      boxShadow:"0 12px 36px rgba(0,0,0,.75)",
+      fontFamily:"'Bricolage Grotesque',-apple-system,sans-serif",width:"220px"});
+    let px=e.clientX+14,py=e.clientY+14;
+    if(px+235>window.innerWidth)px=e.clientX-235;
+    if(py+185>window.innerHeight)py=e.clientY-185;
+    pop.style.left=px+"px";pop.style.top=py+"px";
+    const sw=document.createElement("div");
+    Object.assign(sw.style,{width:"100%",height:"48px",borderRadius:"8px",background:hex,
+      border:"1px solid rgba(255,255,255,.07)",marginBottom:"10px"});
+    function row(fmt,val){
+      const r=document.createElement("div");r.style.cssText="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-top:1px solid #1e1e21;gap:8px";
+      const l=document.createElement("div");l.style.cssText="display:flex;flex-direction:column;gap:2px;min-width:0";
+      const fe=document.createElement("span");fe.style.cssText="font-size:9px;font-weight:700;color:#3f3f46;text-transform:uppercase;letter-spacing:.08em";fe.textContent=fmt;
+      const ve=document.createElement("span");ve.style.cssText="font-size:12px;font-weight:600;color:#d4d4d8;font-family:'SF Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap";ve.textContent=val;
+      l.append(fe,ve);
+      const btn=document.createElement("button");btn.style.cssText="background:#1a1a1d;border:1px solid #27272a;border-radius:5px;color:#71717a;font-size:10px;padding:3px 8px;cursor:pointer;font-family:inherit;flex-shrink:0;transition:color .12s,border-color .12s";
+      btn.textContent="Copy";btn.addEventListener("click",()=>{navigator.clipboard.writeText(val).catch(()=>{});btn.textContent="✓";btn.style.color="#22c55e";setTimeout(()=>{btn.textContent="Copy";btn.style.color="";},1400);});
+      r.append(l,btn);return r;
     }
-
-    // Close button
-    const closeRow = document.createElement('div');
-    Object.assign(closeRow.style, {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '8px',
-    });
-    const title = document.createElement('span');
-    title.style.cssText = 'font-size:11px;font-weight:700;color:#52525b;text-transform:uppercase;letter-spacing:.05em';
-    title.textContent = 'Picked Color';
-    const closeBtn = document.createElement('button');
-    Object.assign(closeBtn.style, {
-      background: 'none',
-      border: 'none',
-      color: '#52525b',
-      cursor: 'pointer',
-      fontSize: '14px',
-      padding: '0',
-      lineHeight: '1',
-    });
-    closeBtn.textContent = '×';
-    closeBtn.addEventListener('click', () => pop.remove());
-    closeRow.appendChild(title);
-    closeRow.appendChild(closeBtn);
-
-    pop.appendChild(closeRow);
-    pop.appendChild(swatch);
-    pop.appendChild(makeRow('HEX', hex));
-    pop.appendChild(makeRow('RGB', rgb));
-    pop.appendChild(makeRow('HSL', hsl));
-
-    // Remove any existing popover
-    document.getElementById('__zing-color-popover')?.remove();
+    const hdr=document.createElement("div");hdr.style.cssText="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px";
+    const ttl=document.createElement("span");ttl.style.cssText="font-size:10px;font-weight:700;color:#52525b;text-transform:uppercase;letter-spacing:.07em";ttl.textContent="Picked Color";
+    const xb=document.createElement("button");xb.style.cssText="background:none;border:none;color:#52525b;cursor:pointer;font-size:16px;padding:0;line-height:1";xb.textContent="×";xb.addEventListener("click",()=>pop.remove());
+    hdr.append(ttl,xb);pop.append(hdr,sw,row("HEX",hex),row("RGB",rgb),row("HSL",hsl));
     document.documentElement.appendChild(pop);
-
-    // Dismiss on outside click
-    setTimeout(() => {
-      document.addEventListener('click', function dismiss(ev) {
-        if (!pop.contains(ev.target)) {
-          pop.remove();
-          document.removeEventListener('click', dismiss, true);
-        }
-      }, { capture: true, once: false });
-    }, 50);
+    setTimeout(()=>{
+      document.addEventListener("click",function dm(ev){if(!pop.contains(ev.target)){pop.remove();document.removeEventListener("click",dm,true);}},{capture:true});
+    },80);
   }
-
-  function onClick(e) {
-    // Show popover at click position, then disable picker
-    showPopover(e);
-    e.preventDefault();
-    e.stopPropagation();
+  function onClick(e){
+    if(picker.contains(e.target))return;
+    showPopover(e);e.preventDefault();e.stopPropagation();
     cleanup();
   }
-
-  function onKeyDown(e) {
-    if (e.key === 'Escape') {
-      cleanup();
-      if (isRuntimeAlive()) {
-        try {
-          chrome.runtime.sendMessage({ type: 'DISABLE_COLOR_PICKER' });
-        } catch {}
-      }
-    }
+  function onKey(e){
+    if(e.key!=="Escape")return;
+    cleanup();
+    if(isRuntimeAlive())try{chrome.runtime.sendMessage({type:"CLEAR_COLOR_PICKER_STATE"});}catch{}
   }
-
-  function cleanup() {
-    document.removeEventListener('mousemove', onMouseMove, true);
-    document.removeEventListener('click', onClick, true);
-    document.removeEventListener('keydown', onKeyDown, true);
+  function cleanup(){
+    document.removeEventListener("mousemove",onMove,true);
+    document.removeEventListener("click",onClick,true);
+    document.removeEventListener("keydown",onKey,true);
     picker.remove();
-    document.documentElement.style.removeProperty('cursor');
-    window.__zingColorPickerActive = false;
-    window.__zingColorPickerStop = null;
+    document.documentElement.style.removeProperty("cursor");
+    window.__zingColorPickerActive=false;
+    window.__zingColorPickerStop=null;
+    if(isRuntimeAlive())try{chrome.runtime.sendMessage({type:"CLEAR_COLOR_PICKER_STATE"});}catch{}
   }
-
-  document.addEventListener('mousemove', onMouseMove, true);
-  document.addEventListener('click', onClick, true);
-  document.addEventListener('keydown', onKeyDown, true);
-
-  window.__zingColorPickerStop = cleanup;
+  document.addEventListener("mousemove",onMove,true);
+  document.addEventListener("click",onClick,true);
+  document.addEventListener("keydown",onKey,true);
+  window.__zingColorPickerStop=cleanup;
 }
-
-// Expose so popup can call it via executeScript
-window.__zingInjectColorPicker = __zingInjectColorPicker;
-
-// Also need isRuntimeAlive inside __zingInjectColorPicker — re-check
-// (the outer isRuntimeAlive is in scope since it's the same script context)
+window.__zingInjectColorPicker=__zingInjectColorPicker;
