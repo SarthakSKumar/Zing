@@ -80,7 +80,7 @@ body {
   font-family: "Bricolage Grotesque", sans-serif;
 }
 .tb-brand-logo { width: 20px; height: 20px; border-radius: 4px; }
-.tb-brand-name { font-size: 14px; font-weight: 800; letter-spacing: -0.03em; color: #fafafa; }
+.tb-brand-name { font-size: 38px; font-weight: 800; letter-spacing: -0.03em; color: #fafafa; }
 .tb-brand-sep  { color: var(--muted); font-size: 13px; }
 .tb-brand-sub  { font-size: 12px; font-weight: 500; color: var(--muted2); }
 

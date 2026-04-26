@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Zing",
-  "version": "1.3",
+  "version": "1.4",
   "description": "Save tabs, highlight viewed URLs, JSON viewer & dev tools — powered by your local Zing server",
   "permissions": [
     "tabs",
@@ -10,8 +10,8 @@
     "history",
     "downloads",
     "storage",
-    "debugger",
-    "alarms"
+    "alarms",
+    "clipboardWrite"
   ],
   "host_permissions": ["http://localhost:5000/*", "<all_urls>"],
   "background": {
@@ -40,12 +40,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "viewer.html",
-        "viewer.js",
-        "viewer.css",
-        "icon128.png",
-        "icon48.png",
-        "icon16.png",
+        "viewer.html", "viewer.js", "viewer.css",
+        "icon128.png", "icon48.png", "icon16.png",
         "BricolageGrotesque-VariableFont.ttf"
       ],
       "matches": ["<all_urls>"]
@@ -54,15 +50,7 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "Zing",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
+    "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
   },
-  "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
-  }
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
 }

@@ -1,691 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <style>
-    @font-face {
-      font-family: 'Bricolage Grotesque';
-      src: url('BricolageGrotesque-VariableFont.ttf') format('truetype');
-      font-weight: 200 800;
-      font-style: normal;
-      font-display: swap;
-    }
+<meta charset="UTF-8"/>
+<style>
+@font-face{font-family:'BG';src:url('BricolageGrotesque-VariableFont.ttf') format('truetype');font-weight:200 800;font-display:swap;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  /* Backgrounds */
+  --bg0:#09090b; --bg1:#0d0d0f; --bg2:#111113; --bg3:#1a1a1d; --bgh:#1c1c1f; --bga:#222226;
+  /* Borders */
+  --bd0:#111113; --bd1:#18181b; --bd2:#27272a; --bd3:#3f3f46;
+  /* Text */
+  --tx0:#fafafa; --tx1:#e4e4e7; --tx2:#a1a1aa; --tx3:#71717a; --tx4:#52525b; --tx5:#3f3f46;
+  /* Accent */
+  --ac:#eeae00; --ac-a:rgba(238,174,0,.09); --ac-b:rgba(238,174,0,.32);
+  /* Green */
+  --gr:#22c55e; --gr-a:rgba(34,197,94,.09); --gr-b:rgba(34,197,94,.32);
+  /* Red */
+  --rd:#ef4444; --rd-a:rgba(239,68,68,.08); --rd-b:rgba(239,68,68,.22);
+  /* Radius */
+  --rs:5px; --rm:8px; --rl:10px; --rxl:12px;
+  /* Transition */
+  --t:150ms ease;
+  /* Typography */
+  --font:'BG',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --mono:'SF Mono','Fira Code',ui-monospace,monospace;
+}
 
-    body {
-      width: 600px; min-width: 600px; max-width: 600px;
-      max-height: 720px;
-      font-family: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      background: #09090b; color: #fafafa; font-size: 13px;
-      overflow: hidden;
-      display: flex; flex-direction: column;
-    }
+body{
+  width:370px;min-width:370px;max-width:370px;
+  overflow-x:hidden;overflow-y:hidden;
+  font-family:var(--font);background:var(--bg0);color:var(--tx0);font-size:13px;
+}
+body::-webkit-scrollbar{width:3px;}
+body::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
-    /* ── Header ── */
-    .header {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 14px 10px; border-bottom: 1px solid #18181b;
-      flex-shrink: 0;
-    }
-    .logo img { width: 20px; height: 20px; border-radius: 4px; }
-    .brand { font-size: 15px; font-weight: 800; letter-spacing: -0.03em; color: #fafafa; }
-    .header-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+/* ── Header ── */
+.hdr{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--bd1);}
+.hdr-logo img{width:22px;height:22px;border-radius:5px;}
+.hdr-brand{font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--tx0);}
+.hdr-r{margin-left:auto;display:flex;align-items:center;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bd2);flex-shrink:0;transition:background var(--t);}
+.dot.ok{background:var(--gr);}
+.ibtn{width:24px;height:24px;border-radius:50%;background:var(--bg2);border:1px solid var(--bd2);
+  cursor:pointer;color:var(--tx4);display:flex;align-items:center;justify-content:center;
+  transition:color var(--t),border-color var(--t),background var(--t);padding:0;flex-shrink:0;}
+.ibtn:hover{color:var(--tx2);border-color:var(--bd3);background:var(--bgh);}
 
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #27272a; flex-shrink: 0; transition: background 0.3s;
-    }
-    .dot.ok { background: #22c55e; }
+/* ── Calendar ── */
+.cal{padding:12px 14px 11px;border-bottom:1px solid var(--bd1);
+  background:linear-gradient(160deg,#0f0f12 0%,var(--bg0) 100%);}
+.greeting{font-size:15px;font-weight:700;color:var(--ac);margin-bottom:10px;letter-spacing:-.01em;}
+.cal-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px;}
+.cal-time{font-size:30px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;
+  color:var(--tx0);line-height:1;}
+.cal-date{text-align:right;}
+.cal-wday{font-size:11px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;}
+.cal-fdate{font-size:11px;font-weight:500;color:var(--tx4);margin-top:3px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px; margin-top:16px;}
+.cal-dlbl{text-align:center;font-size:11px;font-weight:700;color:var(--tx5);padding-bottom:5px;user-select:none;}
+.cal-d{text-align:center;font-size:15px;color:var(--tx5);padding:2px 0;border-radius:7px;
+  user-select:none;font-variant-numeric:tabular-nums;line-height:1.5;}
+.cal-d.today{background:var(--ac);color:var(--bg0);font-weight:800;border-radius:10%;}
+.cal-d.wend{color:#2a2a2e;}.cal-d.today.wend{color:var(--bg0);}
 
-    /* ── 2-Column Body ── */
-    .body-cols {
-      display: grid;
-      grid-template-columns: 268px 1fr;
-      min-height: 0;
-      flex: 1;
-    }
+/* ── Section ── */
+.sec{padding:11px 13px 9px;border-bottom:1px solid var(--bd1);}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--tx5);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:8px;}
 
-    /* ── Left Column ── */
-    .col-left {
-      display: flex; flex-direction: column;
-      border-right: 1px solid #18181b;
-      overflow: hidden;
-    }
+/* ── Button grids ── */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
 
-    /* ── Calendar ── */
-    .calendar {
-      padding: 12px 13px 10px;
-      border-bottom: 1px solid #18181b;
-      background: linear-gradient(160deg, #0f0f12 0%, #09090b 100%);
-      flex-shrink: 0;
-    }
-    .cal-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .cal-time {
-      font-size: 26px; font-weight: 700; letter-spacing: -0.04em;
-      font-variant-numeric: tabular-nums; color: #fafafa; line-height: 1;
-    }
-    .cal-date-block { text-align: right; }
-    .cal-weekday { font-size: 11px; font-weight: 700; color: #a1a1a1; text-transform: uppercase; letter-spacing: 0.08em; }
-    .cal-fulldate { font-size: 11px; font-weight: 500; color: #71717a; margin-top: 2px; }
-    .cal-week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .cal-day-label { text-align: center; font-size: 10px; font-weight: 600; color: #52525b; padding-bottom: 4px; user-select: none; }
-    .cal-day { text-align: center; font-size: 15px; color: #3f3f46; padding: 2px 0; border-radius: 8px; user-select: none; font-variant-numeric: tabular-nums; line-height: 1.5; }
-    .cal-day.today { background: #eeae00; color: #09090b; font-weight: 700; border-radius: 20%; }
-    .cal-day.weekend { color: #2a2a2e; }
-    .cal-day.today.weekend { color: #09090b; }
+/* ── Action buttons ── */
+.abtn{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;padding:10px 4px 9px;
+  background:var(--bg2);border:1px solid var(--bd1);border-radius:var(--rm);
+  cursor:pointer;color:var(--tx4);font-family:var(--font);
+  transition:background var(--t),border-color var(--t),color var(--t),transform 100ms ease;
+  position:relative;}
+.abtn:hover:not(:disabled){background:var(--bgh);border-color:var(--bd2);color:var(--tx2);}
+.abtn:active:not(:disabled){transform:scale(.95);background:var(--bga);}
+.abtn:disabled{opacity:.25;cursor:not-allowed;}
+.abtn.on{background:var(--ac-a)!important;border-color:var(--ac-b)!important;color:var(--ac)!important;}
+.abtn.on:hover:not(:disabled){background:rgba(238,174,0,.14)!important;}
+.aico{width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+.aico img{width:22px;height:22px;object-fit:contain;border-radius:4px;}
+.albl{font-size:11px;font-weight:500;text-align:center;line-height:1.2;letter-spacing:-.01em;}
+/* Tooltip */
+.abtn::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%);background:var(--bg3);color:var(--tx1);
+  font-size:11px;font-weight:500;white-space:nowrap;padding:4px 9px;
+  border-radius:var(--rs);border:1px solid var(--bd2);
+  pointer-events:none;opacity:0;transition:opacity var(--t);z-index:100;}
+.abtn:hover:not(:disabled)::after{opacity:1;}
 
-    /* ── Action Buttons Grid ── */
-    .actions-wrap { padding: 10px 10px 6px; border-bottom: 1px solid #18181b; flex-shrink: 0; }
-    .actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+/* ── BuiltWith panel ── */
+#bw-panel{display:none;border-top:1px solid var(--bd1);max-height:224px;overflow-y:auto;background:var(--bg0);}
+#bw-panel::-webkit-scrollbar{width:3px;}
+#bw-panel::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.bw-load{display:flex;align-items:center;justify-content:center;gap:8px;padding:20px;color:var(--tx4);font-size:12px;}
+.bw-spin{width:14px;height:14px;border:2px solid var(--bd2);border-top-color:var(--tx3);
+  border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.bw-err{padding:16px;text-align:center;color:var(--rd);font-size:12px;}
+.bw-dom{display:flex;align-items:center;gap:6px;padding:9px 13px 5px;font-size:12px;font-weight:700;color:var(--tx0);}
+.bw-dom a{color:var(--tx0);text-decoration:none;display:flex;align-items:center;gap:4px;}
+.bw-dom a:hover{color:var(--tx2);}
+.bw-meta{padding:0 13px 7px;font-size:10px;color:var(--tx4);}
+.bw-grp{border-top:1px solid var(--bd0);padding:6px 12px;}
+.bw-gh{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--tx4);
+  text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;cursor:pointer;user-select:none;}
+.bw-gh .bw-ld{margin-left:auto;display:flex;gap:4px;}
+.bw-pill{font-size:9px;font-weight:700;padding:1px 6px;border-radius:var(--rm);}
+.bw-live{background:var(--gr-a);color:var(--gr);}
+.bw-dead{background:var(--rd-a);color:var(--rd);}
+.bw-cats{display:flex;flex-direction:column;gap:2px;}
+.bw-cat{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:var(--rs);font-size:11px;color:var(--tx3);}
+.bw-cat:hover{background:var(--bg3);color:var(--tx2);}
+.bw-ci{width:13px;height:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.bw-ci img,.bw-ci svg{width:13px;height:13px;object-fit:contain;}
+.bw-cn{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bw-gt{transition:transform var(--t);}
+.bw-grp.col .bw-cats{display:none;}
+.bw-grp.col .bw-gt{transform:rotate(-90deg);}
 
-    .action-btn {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; padding: 9px 4px 8px;
-      background: #111113; border: 1px solid #1e1e21; border-radius: 9px;
-      cursor: pointer; color: #71717a; font-family: inherit;
-      transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
-      position: relative;
-    }
-    .action-btn:hover:not(:disabled) { background: #1c1c1f; border-color: #2d2d31; color: #d4d4d8; }
-    .action-btn:active:not(:disabled) { transform: scale(0.96); background: #222226; }
-    .action-btn:disabled { opacity: 0.28; cursor: not-allowed; }
-    .action-btn.active {
-      background: rgba(234,179,8,0.07) !important;
-      border-color: rgba(234,179,8,0.3) !important;
-      color: #eab308 !important;
-    }
-    .action-btn.active:hover:not(:disabled) {
-      background: rgba(234,179,8,0.12) !important;
-      border-color: rgba(234,179,8,0.45) !important;
-    }
+/* ── BuiltWith slide panel ── */
+#bw-slide{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;
+  display:flex;align-items:stretch;justify-content:flex-end;}
+#bw-slide.h{display:none;}
+.bw-panel{width:310px;background:var(--bg0);border-left:1px solid var(--bd1);
+  display:flex;flex-direction:column;overflow:hidden;}
+.bw-phdr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--bd1);flex-shrink:0;}
+.bw-ptitle{font-size:13px;font-weight:800;color:var(--tx0);letter-spacing:-.02em;}
+.bw-pdom{font-size:11px;color:var(--tx4);font-weight:500;margin-top:1px;}
+.bw-pbody{flex:1;overflow-y:auto;}
+.bw-pbody::-webkit-scrollbar{width:3px;}
+.bw-pbody::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
 
-    .action-icon {
-      width: 26px; height: 26px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .action-icon img { width: 24px; height: 24px; object-fit: contain; border-radius: 4px; }
-    .action-label { font-size: 9.5px; font-weight: 500; text-align: center; line-height: 1.2; }
+/* ── Result toast ── */
+#result{margin:6px 12px;font-size:12px;line-height:1.5;padding:7px 11px;border-radius:var(--rm);
+  display:none;word-break:break-word;}
+#result.success{background:var(--gr-a);color:var(--gr);border:1px solid var(--gr-b);}
+#result.error{background:var(--rd-a);color:var(--rd);border:1px solid var(--rd-b);}
+#result.info{background:rgba(255,255,255,.03);color:var(--tx3);border:1px solid var(--bd1);}
 
-    /* CSS tooltip */
-    .action-btn::after {
-      content: attr(data-tip);
-      position: absolute; bottom: calc(100% + 7px); left: 50%;
-      transform: translateX(-50%);
-      background: #18181b; color: #e4e4e7;
-      font-size: 11px; font-weight: 500; white-space: nowrap;
-      padding: 4px 8px; border-radius: 5px; border: 1px solid #27272a;
-      pointer-events: none; opacity: 0; transition: opacity 0.12s; z-index: 100;
-    }
-    .action-btn:hover:not(:disabled)::after { opacity: 1; }
+/* ── Fact card ── */
+#fact-card{display:flex;align-items:flex-start;gap:10px;margin:9px 12px 10px;
+  padding:10px 12px;background:var(--bg2);border:1px solid var(--bd1);border-radius:var(--rm);}
+.fact-ico{font-size:15px;flex-shrink:0;margin-top:1px;opacity:.7;}
+#fact-txt{font-size:12px;color:var(--tx4);line-height:1.6;font-style:italic;}
+#fact-txt.loading{color:var(--tx5);}
 
-    /* divider between 2 rows */
-    .actions-divider { display: contents; }
-    .actions-row-label {
-      font-size: 9px; font-weight: 700; color: #3f3f46;
-      text-transform: uppercase; letter-spacing: 0.07em;
-      padding: 6px 0 4px; grid-column: 1 / -1;
-    }
+/* ── Toggle switch ── */
+.ts{flex-shrink:0;display:inline-block;position:relative;width:36px;height:20px;cursor:pointer;}
+.ts input{position:absolute;opacity:0;width:0;height:0;}
+.ts-t{position:absolute;inset:0;background:var(--bg3);border:1px solid var(--bd2);
+  border-radius:var(--rm);transition:background var(--t),border-color var(--t);}
+.ts-k{position:absolute;left:3px;top:3px;width:12px;height:12px;background:var(--tx5);
+  border-radius:50%;transition:transform var(--t),background var(--t);box-shadow:0 1px 3px rgba(0,0,0,.5);}
+.ts input:checked+.ts-t{background:var(--gr-a);border-color:var(--gr-b);}
+.ts input:checked+.ts-t .ts-k{transform:translateX(16px);background:var(--gr);}
 
-    /* ── JSON Prettify compact toggle ── */
-    .json-toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 12px;
-      border-bottom: 1px solid #18181b;
-      flex-shrink: 0;
-    }
-    .json-toggle-info { flex: 1; }
-    .json-toggle-label { font-size: 11px; font-weight: 600; color: #a1a1aa; }
+/* ── Info popover ── */
+#info-pop{position:fixed;top:44px;right:10px;width:300px;background:var(--bg1);
+  border:1px solid var(--bd2);border-radius:var(--rl);padding:10px 12px;z-index:400;
+  box-shadow:0 8px 28px rgba(0,0,0,.72);}
+#info-pop.h{display:none;}
+.ip-ttl{font-size:9px;font-weight:700;color:var(--tx5);text-transform:uppercase;
+  letter-spacing:.09em;margin-bottom:7px;}
+.ip-f{display:flex;flex-direction:column;gap:1px;padding:5px 0;border-top:1px solid var(--bd1);}
+.ip-fn{font-size:12px;font-weight:600;color:var(--tx1);}
+.ip-fd{font-size:11px;color:var(--tx5);}
 
-    /* Toggle switch */
-    .ts { flex-shrink: 0; display: inline-block; position: relative; width: 34px; height: 19px; cursor: pointer; }
-    .ts input { position: absolute; opacity: 0; width: 0; height: 0; }
-    .ts-track {
-      position: absolute; inset: 0;
-      background: #1e1e22; border: 1px solid #2a2a2e; border-radius: 10px;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .ts-thumb {
-      position: absolute; left: 2px; top: 2px; width: 13px; height: 13px;
-      background: #3f3f46; border-radius: 50%;
-      transition: transform 0.2s ease, background 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,.6);
-    }
-    .ts input:checked + .ts-track { background: rgba(34,197,94,.18); border-color: rgba(34,197,94,.4); }
-    .ts input:checked + .ts-track .ts-thumb { transform: translateX(15px); background: #22c55e; }
-
-    /* ── Result toast ── */
-    #result {
-      margin: 6px 10px; font-size: 11px; line-height: 1.5;
-      padding: 6px 10px; border-radius: 6px; display: none;
-      word-break: break-word; overflow-wrap: break-word;
-      flex-shrink: 0;
-    }
-    #result.success { background: rgba(34,197,94,.07); color: #22c55e; border: 1px solid rgba(34,197,94,.2); }
-    #result.error   { background: rgba(239,68,68,.07); color: #ef4444; border: 1px solid rgba(239,68,68,.2); }
-    #result.info    { background: rgba(255,255,255,.03); color: #71717a; border: 1px solid #1e1e21; }
-
-    /* ── Right Column — BuiltWith ── */
-    .col-right {
-      display: flex; flex-direction: column;
-      overflow: hidden;
-    }
-
-    .bw-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 13px 9px;
-      border-bottom: 1px solid #18181b;
-      flex-shrink: 0;
-    }
-    .bw-header-title {
-      font-size: 10px; font-weight: 700; color: #3f3f46;
-      text-transform: uppercase; letter-spacing: 0.08em;
-    }
-    #btn-bw-analyse {
-      font-size: 10px; font-weight: 600; color: #a1a1aa;
-      background: #1a1a1d; border: 1px solid #27272a; border-radius: 5px;
-      padding: 3px 9px; cursor: pointer; font-family: inherit;
-      transition: background 0.12s, color 0.12s;
-    }
-    #btn-bw-analyse:hover { background: #222226; color: #d4d4d8; }
-
-    #bw-panel {
-      flex: 1;
-      overflow-y: auto;
-    }
-    #bw-panel::-webkit-scrollbar { width: 4px; }
-    #bw-panel::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
-
-    .bw-empty {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100%; gap: 8px; padding: 20px;
-      color: #3f3f46; text-align: center;
-    }
-    .bw-empty-icon { opacity: 0.4; }
-    .bw-empty-text { font-size: 11.5px; font-weight: 600; color: #3f3f46; line-height: 1.4; }
-    .bw-empty-sub { font-size: 10.5px; color: #27272a; }
-
-    .bw-loading {
-      display: flex; align-items: center; justify-content: center;
-      gap: 8px; padding: 24px; color: #52525b; font-size: 12px;
-    }
-    .bw-spinner {
-      width: 16px; height: 16px; border: 2px solid #27272a;
-      border-top-color: #a1a1aa; border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .bw-error { padding: 16px; text-align: center; color: #ef4444; font-size: 12px; }
-    .bw-domain-row {
-      display: flex; align-items: center; gap: 7px;
-      padding: 9px 13px 5px; font-size: 12px; font-weight: 700; color: #fafafa;
-    }
-    .bw-domain-row a { color: #fafafa; text-decoration: none; display: flex; align-items: center; gap: 5px; }
-    .bw-domain-row a:hover { color: #a1a1aa; }
-    .bw-meta { padding: 0 13px 7px; font-size: 10.5px; color: #52525b; }
-    .bw-group { border-top: 1px solid #1a1a1e; padding: 7px 13px; }
-    .bw-group-header {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 10.5px; font-weight: 600; color: #71717a;
-      text-transform: uppercase; letter-spacing: 0.07em;
-      margin-bottom: 5px; cursor: pointer; user-select: none;
-    }
-    .bw-group-header .bw-live-dead { margin-left: auto; display: flex; gap: 5px; }
-    .bw-pill { font-size: 9.5px; font-weight: 600; padding: 1px 5px; border-radius: 20px; }
-    .bw-pill-live { background: rgba(34,197,94,.12); color: #22c55e; }
-    .bw-pill-dead { background: rgba(239,68,68,.08); color: #ef4444; }
-    .bw-categories { display: flex; flex-direction: column; gap: 2px; }
-    .bw-cat-row {
-      display: flex; align-items: center; gap: 6px;
-      padding: 3px 5px; border-radius: 5px; font-size: 11px; color: #a1a1aa;
-    }
-    .bw-cat-row:hover { background: #1a1a1e; }
-    .bw-cat-icon { width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .bw-cat-icon img { width: 14px; height: 14px; object-fit: contain; }
-    .bw-cat-icon svg { width: 13px; height: 13px; }
-    .bw-cat-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .bw-group-toggle { transition: transform 0.15s; }
-    .bw-group.collapsed .bw-categories { display: none; }
-    .bw-group.collapsed .bw-group-toggle { transform: rotate(-90deg); }
-
-    /* ── Header icon buttons ── */
-    .icon-btn {
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #111113; border: 1px solid #27272a;
-      cursor: pointer; color: #52525b;
-      display: flex; align-items: center; justify-content: center;
-      transition: color 0.12s, border-color 0.12s;
-      padding: 0;
-    }
-    .icon-btn:hover { color: #a1a1aa; border-color: #3f3f46; }
-
-    /* ── Info popover ── */
-    #info-popover {
-      position: fixed; top: 42px; right: 12px;
-      width: 240px; background: #111113;
-      border: 1px solid #27272a; border-radius: 10px;
-      padding: 10px 12px; z-index: 400;
-      box-shadow: 0 8px 28px rgba(0,0,0,.7);
-    }
-    #info-popover.hidden { display: none; }
-    .info-pop-title {
-      font-size: 9px; font-weight: 700; color: #3f3f46;
-      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;
-    }
-    .info-feat {
-      display: flex; flex-direction: column; gap: 1px;
-      padding: 5px 0; border-top: 1px solid #18181b;
-    }
-    .info-feat-name { font-size: 11px; font-weight: 600; color: #d4d4d8; }
-    .info-feat-desc { font-size: 10px; color: #52525b; }
-
-    /* ── Settings popover ── */
-    #settings-popover {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.6);
-      z-index: 500;
-      display: flex; align-items: stretch; justify-content: flex-end;
-    }
-    #settings-popover.hidden { display: none; }
-
-    .settings-panel {
-      width: 340px;
-      background: #0d0d0f;
-      border-left: 1px solid #18181b;
-      display: flex; flex-direction: column;
-      overflow: hidden;
-    }
-    .settings-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 14px;
-      border-bottom: 1px solid #18181b;
-      flex-shrink: 0;
-    }
-    .settings-title {
-      font-size: 13px; font-weight: 800; color: #fafafa; letter-spacing: -0.02em;
-    }
-    .settings-body {
-      flex: 1; overflow-y: auto; padding: 4px 0 12px;
-    }
-    .settings-body::-webkit-scrollbar { width: 4px; }
-    .settings-body::-webkit-scrollbar-thumb { background: #27272a; border-radius: 2px; }
-
-    .settings-section {
-      padding: 10px 14px 6px;
-    }
-    .settings-section + .settings-section {
-      border-top: 1px solid #18181b;
-    }
-    .settings-section-title {
-      font-size: 9px; font-weight: 700; color: #3f3f46;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin-bottom: 8px;
-    }
-
-    .setting-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 0; gap: 10px;
-    }
-    .setting-row + .setting-row { border-top: 1px solid #111113; }
-    .setting-info { flex: 1; }
-    .setting-label { font-size: 11.5px; font-weight: 600; color: #d4d4d8; }
-    .setting-desc { font-size: 10px; color: #3f3f46; margin-top: 1px; }
-
-    /* Select input */
-    .setting-select {
-      background: #1a1a1d; border: 1px solid #27272a; border-radius: 5px;
-      color: #a1a1aa; font-size: 11px; font-family: inherit;
-      padding: 4px 8px; cursor: pointer; outline: none;
-    }
-    .setting-select:focus { border-color: #3f3f46; }
-
-    /* Text input */
-    .setting-input {
-      background: #1a1a1d; border: 1px solid #27272a; border-radius: 5px;
-      color: #d4d4d8; font-size: 11px; font-family: inherit;
-      padding: 4px 8px; outline: none; width: 100%;
-    }
-    .setting-input:focus { border-color: #3f3f46; }
-
-    /* Checkbox */
-    .setting-checkbox {
-      width: 15px; height: 15px; cursor: pointer; accent-color: #22c55e;
-      flex-shrink: 0;
-    }
-
-    /* Scrub word tags */
-    .scrub-words-area { margin-top: 6px; }
-    .scrub-tags {
-      display: flex; flex-wrap: wrap; gap: 4px;
-      margin-bottom: 6px; min-height: 24px;
-    }
-    .scrub-tag {
-      display: flex; align-items: center; gap: 4px;
-      background: #1a1a1d; border: 1px solid #27272a; border-radius: 4px;
-      padding: 2px 7px 2px 8px; font-size: 10.5px; color: #a1a1aa;
-    }
-    .scrub-tag-remove {
-      background: none; border: none; color: #52525b; cursor: pointer;
-      font-size: 12px; padding: 0; line-height: 1;
-    }
-    .scrub-tag-remove:hover { color: #ef4444; }
-    .scrub-add-row { display: flex; gap: 5px; }
-    .scrub-add-input {
-      flex: 1; background: #1a1a1d; border: 1px solid #27272a; border-radius: 5px;
-      color: #d4d4d8; font-size: 11px; font-family: inherit;
-      padding: 5px 8px; outline: none;
-    }
-    .scrub-add-input:focus { border-color: #3f3f46; }
-    .scrub-add-btn {
-      background: #1a1a1d; border: 1px solid #27272a; border-radius: 5px;
-      color: #a1a1aa; font-size: 11px; font-family: inherit;
-      padding: 5px 10px; cursor: pointer; transition: background 0.12s;
-    }
-    .scrub-add-btn:hover { background: #222226; color: #d4d4d8; }
-
-    .settings-save-row {
-      padding: 10px 14px 0;
-      display: flex; justify-content: flex-end;
-    }
-    .settings-save-btn {
-      background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
-      border-radius: 6px; color: #22c55e;
-      font-size: 11.5px; font-weight: 700; font-family: inherit;
-      padding: 6px 16px; cursor: pointer; transition: background 0.12s;
-    }
-    .settings-save-btn:hover { background: rgba(34,197,94,.16); }
-  </style>
+/* ── Settings overlay ── */
+#s-pop{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:500;
+  display:flex;align-items:stretch;justify-content:flex-end;}
+#s-pop.h{display:none;}
+.s-panel{width:318px;background:var(--bg0);border-left:1px solid var(--bd1);
+  display:flex;flex-direction:column;overflow:hidden;}
+.s-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--bd1);flex-shrink:0;}
+.s-title-row{display:flex;align-items:center;gap:9px;}
+.s-title{font-size:14px;font-weight:800;color:var(--tx0);letter-spacing:-.02em;}
+#s-saved{font-size:11px;font-weight:600;color:var(--gr);opacity:0;transition:opacity .25s;}
+#s-saved.vis{opacity:1;}
+.s-body{flex:1;overflow-y:auto;padding:4px 0 16px;}
+.s-body::-webkit-scrollbar{width:3px;}
+.s-body::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px;}
+.s-sec{padding:11px 14px 8px;}
+.s-sec+.s-sec{border-top:1px solid var(--bd1);}
+.s-stl{font-size:10px;font-weight:700;color:var(--tx5);text-transform:uppercase;
+  letter-spacing:.09em;margin-bottom:9px;}
+.s-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;gap:10px;}
+.s-row+.s-row{border-top:1px solid var(--bd0);}
+.s-lbl{font-size:12px;font-weight:600;color:var(--tx1);}
+.s-desc{font-size:11px;color:var(--tx5);margin-top:1px;}
+.s-sel{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);
+  color:var(--tx2);font-size:12px;font-family:var(--font);padding:5px 8px;
+  cursor:pointer;outline:none;transition:border-color var(--t);}
+.s-sel:focus{border-color:var(--bd3);}
+.s-inp{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);
+  color:var(--tx0);font-size:12px;font-family:var(--font);padding:7px 10px;
+  outline:none;width:100%;margin-top:7px;transition:border-color var(--t);}
+.s-inp:focus{border-color:var(--bd3);}
+.s-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--gr);flex-shrink:0;}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0 7px;}
+.tag{display:flex;align-items:center;gap:4px;background:var(--bg3);
+  border:1px solid var(--bd2);border-radius:5px;padding:3px 8px 3px 9px;
+  font-size:11px;color:var(--tx2);}
+.tag-rm{background:none;border:none;color:var(--tx4);cursor:pointer;
+  font-size:13px;padding:0;line-height:1;}
+.tag-rm:hover{color:var(--rd);}
+.add-row{display:flex;gap:6px;}
+.add-inp{flex:1;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);
+  color:var(--tx0);font-size:12px;font-family:var(--font);padding:6px 9px;outline:none;}
+.add-inp:focus{border-color:var(--bd3);}
+.add-btn{background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rs);
+  color:var(--tx2);font-size:12px;font-family:var(--font);padding:6px 12px;
+  cursor:pointer;transition:background var(--t),color var(--t);}
+.add-btn:hover{background:var(--bgh);color:var(--tx0);}
+#s-dt-cust{display:none;}
+</style>
 </head>
 <body>
 
-  <!-- Header -->
-  <div class="header">
-    <span class="logo"><img src="icon128.png" alt="Zing" /></span>
-    <span class="brand">Zing</span>
-    <div class="header-right">
-      <!-- Settings button -->
-      <button class="icon-btn" id="btn-settings" title="Settings">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
+<!-- Header -->
+<div class="hdr">
+  <span class="hdr-logo"><img src="icon128.png" alt="Zing"/></span>
+  <span class="hdr-brand">Zing</span>
+  <div class="hdr-r">
+    <button class="ibtn" id="btn-settings" title="Settings">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <button class="ibtn" id="btn-info" title="About Zing">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.01"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+    </button>
+    <div id="dot" class="dot" title="Server status"></div>
+  </div>
+</div>
+
+<!-- Calendar -->
+<div class="cal">
+  <div class="greeting" id="greeting">Good Evening</div>
+  <div class="cal-top">
+    <div class="cal-time" id="cal-time">00:00:00</div>
+    <div class="cal-date"><div class="cal-wday" id="cal-wday">Monday</div><div class="cal-fdate" id="cal-fdate">1 Jan 2026</div></div>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+<!-- Quick Actions -->
+<div class="sec">
+  <div class="sec-lbl">Quick Actions</div>
+  <div class="g3">
+    <button id="btn-save" class="abtn" disabled data-tip="Save all tabs to a collection">
+      <div class="aico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div>
+      <span class="albl">Save Tabs</span>
+    </button>
+    <button id="btn-screenshot" class="abtn" data-tip="Full page screenshot to Downloads">
+      <div class="aico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <span class="albl">Screenshot</span>
+    </button>
+    <button id="btn-open" class="abtn" data-tip="Open Zing URL Zone">
+      <div class="aico"><img src="icon128.png" alt="Zing"/></div>
+      <span class="albl">URL Zone</span>
+    </button>
+  </div>
+</div>
+
+<!-- Dev Tools -->
+<div class="sec">
+  <div class="sec-lbl">Dev Tools</div>
+  <div class="g4">
+    <button id="btn-dark" class="abtn" data-tip="Smart dark mode for this tab">
+      <div class="aico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+      <span class="albl">Dark</span>
+    </button>
+    <button id="btn-pest" class="abtn" data-tip="Outline elements · Ctrl+Click copies">
+      <div class="aico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M12 12v9"/><path d="M8 16H5m14 0h-3"/></svg></div>
+      <span class="albl">Pesticide</span>
+    </button>
+    <button id="btn-color" class="abtn" data-tip="Pick any color from the page">
+      <div class="aico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 13.5V22h8.5l9.46-9.46-8.5-8.5z"/><path d="M14.5 5.5l4 4"/><path d="M20.5 2.5a2.12 2.12 0 0 1 0 3L19 7l-3-3 1.5-1.5a2.12 2.12 0 0 1 3 0z"/></svg></div>
+      <span class="albl">Picker</span>
+    </button>
+    <button id="btn-bw" class="abtn" data-tip="Analyse this site's tech stack">
+      <div class="aico"><img src="builtwith.png" alt="BW" onerror="this.style.display='none'"/></div>
+      <span class="albl">BuiltWith</span>
+    </button>
+  </div>
+</div>
+
+<!-- Fact card (above BW panel) -->
+<div id="fact-card">
+  <span class="fact-ico">💡</span>
+  <span id="fact-txt" class="loading">Fetching a random fact…</span>
+</div>
+
+<!-- Result toast -->
+<div id="result"></div>
+
+
+<!-- Info popover -->
+<div id="info-pop" class="h">
+  <div class="ip-ttl">Zing Features</div>
+  <div class="ip-f"><span class="ip-fn">URL Zone</span><span class="ip-fd">Save, organize &amp; open URL collections</span></div>
+  <div class="ip-f"><span class="ip-fn">Dark Reader</span><span class="ip-fd">Smart dark mode — skips already-dark pages</span></div>
+  <div class="ip-f"><span class="ip-fn">Pesticide</span><span class="ip-fd">Color-coded element outlines</span></div>
+  <div class="ip-f"><span class="ip-fn">Color Picker</span><span class="ip-fd">Magnifier with live HEX/RGB/HSL output</span></div>
+  <div class="ip-f"><span class="ip-fn">BuiltWith</span><span class="ip-fd">Detect the tech stack of any website</span></div>
+  <div class="ip-f"><span class="ip-fn">Screenshot</span><span class="ip-fd">Full-page PNG capture + clipboard copy</span></div>
+  <div class="ip-f"><span class="ip-fn">JSON Prettify</span><span class="ip-fd">Auto-detect raw JSON pages, render as tree</span></div>
+  <div class="ip-f"><span class="ip-fn">Viewed Overlay</span><span class="ip-fd">Highlights links you've already saved</span></div>
+  <div class="ip-f"><span class="ip-fn">History Scrub</span><span class="ip-fd">Auto-remove sensitive browser history entries</span></div>
+  <div class="ip-f"><span class="ip-fn">WhatFont</span><span class="ip-fd">Inspect fonts by selecting any text on a page</span></div>
+</div>
+
+<!-- Settings overlay -->
+<div id="s-pop" class="h">
+  <div style="flex:1" id="s-bd"></div>
+  <div class="s-panel">
+    <div class="s-hdr">
+      <div class="s-title-row"><span class="s-title">Settings</span><span id="s-saved">✓ Saved</span></div>
+      <button class="ibtn" id="s-close" title="Close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
-      <!-- Info button -->
-      <button class="icon-btn" id="btn-info" title="About Zing features">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="8.01"/>
-          <line x1="12" y1="12" x2="12" y2="16"/>
-        </svg>
-      </button>
-      <div id="dot" class="dot" title="Server status"></div>
     </div>
-  </div>
+    <div class="s-body">
 
-  <!-- 2-Column Body -->
-  <div class="body-cols">
+      <!-- Profile -->
+      <div class="s-sec">
+        <div class="s-stl">Profile</div>
+        <div class="s-row"><div><div class="s-lbl">Your Name</div><div class="s-desc">Used in the greeting (optional)</div></div></div>
+        <input class="s-inp" id="s-name" type="text" placeholder="e.g. Sarthak" autocomplete="off"/>
+      </div>
 
-    <!-- LEFT column -->
-    <div class="col-left">
+      <!-- JSON Prettify -->
+      <div class="s-sec">
+        <div class="s-stl">JSON Prettify</div>
+        <div class="s-row">
+          <div><div class="s-lbl">Enable by default</div><div class="s-desc">Auto-redirect raw JSON pages to tree viewer</div></div>
+          <label class="ts"><input type="checkbox" id="s-json"/><div class="ts-t"><div class="ts-k"></div></div></label>
+        </div>
+      </div>
 
-      <!-- Calendar -->
-      <div class="calendar">
-        <div class="cal-top-row">
-          <div class="cal-time" id="cal-time">00:00:00</div>
-          <div class="cal-date-block">
-            <div class="cal-weekday" id="cal-weekday">Monday</div>
-            <div class="cal-fulldate" id="cal-fulldate">1 Jan 2026</div>
+      <!-- History Scrub -->
+      <div class="s-sec">
+        <div class="s-stl">History Scrub</div>
+        <div class="s-row">
+          <div><div class="s-lbl">Enable scrubbing</div><div class="s-desc">Remove sensitive history entries automatically</div></div>
+          <label class="ts"><input type="checkbox" id="s-scrub-on"/><div class="ts-t"><div class="ts-k"></div></div></label>
+        </div>
+        <div class="s-row">
+          <div class="s-lbl" style="flex:1">Frequency</div>
+          <select class="s-sel" id="s-scrub-freq">
+            <option value="startup">On startup</option>
+            <option value="1min">Every 1 min</option>
+            <option value="5min">Every 5 min</option>
+            <option value="15min">Every 15 min</option>
+            <option value="1hour">Every 1 hour</option>
+            <option value="6hours">Every 6 hours</option>
+          </select>
+        </div>
+        <div style="margin-top:7px">
+          <div class="s-lbl" style="font-size:11px;margin-bottom:5px">Keywords to scrub</div>
+          <div class="tags" id="s-scrub-tags"></div>
+          <div class="add-row">
+            <input class="add-inp" id="s-scrub-inp" type="text" placeholder="Add keyword…"/>
+            <button class="add-btn" id="s-scrub-add">Add</button>
           </div>
         </div>
-        <div class="cal-week-grid" id="cal-grid"></div>
       </div>
 
-      <!-- Quick actions — row 1: core tools -->
-      <div class="actions-wrap">
-        <div class="actions-grid">
-          <div class="actions-row-label">Quick Actions</div>
-
-          <button id="btn-save" class="action-btn" disabled data-tip="Save Tabs">
-            <div class="action-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                <polyline points="17 21 17 13 7 13 7 21"/>
-                <polyline points="7 3 7 8 15 8"/>
-              </svg>
-            </div>
-            <span class="action-label">Save Tabs</span>
-          </button>
-
-          <button id="btn-screenshot" class="action-btn" data-tip="Full Page Screenshot">
-            <div class="action-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
-            <span class="action-label">Screenshot</span>
-          </button>
-
-          <button id="btn-open" class="action-btn" data-tip="Zing URL Zone">
-            <div class="action-icon">
-              <img src="icon128.png" alt="Zing" />
-            </div>
-            <span class="action-label">URL Zone</span>
-          </button>
-
-          <!-- Row 2: Dev Tools -->
-          <div class="actions-row-label">Dev Tools</div>
-
-          <button id="btn-dark-reader" class="action-btn" data-tip="Toggle Dark Reader">
-            <div class="action-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            </div>
-            <span class="action-label">Dark Reader</span>
-          </button>
-
-          <button id="btn-pesticide" class="action-btn" data-tip="Pesticide Overlay">
-            <div class="action-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 2l4 2 4-2"/>
-                <path d="M8 22l4-2 4 2"/>
-                <rect x="6" y="4" width="12" height="16" rx="4" ry="4"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8.5" y1="11" x2="15.5" y2="11"/>
-              </svg>
-            </div>
-            <span class="action-label">Pesticide</span>
-          </button>
-
-          <button id="btn-color-picker" class="action-btn" data-tip="Color Picker">
-            <div class="action-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-                <path d="M9.03 16.97A5 5 0 0 0 15 12"/>
-              </svg>
-            </div>
-            <span class="action-label">Color Picker</span>
-          </button>
-
+      <!-- Viewed Overlay -->
+      <div class="s-sec">
+        <div class="s-stl">Viewed Overlay</div>
+        <div class="s-row"><div><div class="s-lbl">Site allow-list</div><div class="s-desc">Leave empty to apply on all sites, or add specific domains</div></div></div>
+        <div class="tags" id="s-ov-tags"></div>
+        <div class="add-row">
+          <input class="add-inp" id="s-ov-inp" type="text" placeholder="e.g. github.com"/>
+          <button class="add-btn" id="s-ov-add">Add</button>
         </div>
       </div>
 
-      <!-- JSON Prettify compact toggle -->
-      <div class="json-toggle-row">
-        <div class="json-toggle-info">
-          <span class="json-toggle-label">JSON Prettify</span>
+      <!-- URL Zone -->
+      <div class="s-sec">
+        <div class="s-stl">URL Zone</div>
+        <div class="s-row">
+          <div class="s-lbl" style="flex:1">Collections refresh</div>
+          <select class="s-sel" id="s-refresh">
+            <option value="5">Every 5 sec</option>
+            <option value="10">Every 10 sec</option>
+            <option value="30">Every 30 sec</option>
+            <option value="60">Every 1 min</option>
+          </select>
         </div>
-        <label class="ts" title="Toggle JSON Prettify">
-          <input type="checkbox" id="tog-json" />
-          <div class="ts-track"><div class="ts-thumb"></div></div>
-        </label>
-      </div>
-
-      <!-- Result toast -->
-      <div id="result"></div>
-
-    </div><!-- /col-left -->
-
-    <!-- RIGHT column — BuiltWith -->
-    <div class="col-right">
-      <div class="bw-header">
-        <span class="bw-header-title">BuiltWith</span>
-        <button id="btn-bw-analyse">Analyse</button>
-      </div>
-      <div id="bw-panel">
-        <div class="bw-empty">
-          <div class="bw-empty-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27272a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <div class="bw-empty-text">Tech stack analysis</div>
-          <div class="bw-empty-sub">Click Analyse to inspect this site</div>
+        <div class="s-row">
+          <div class="s-lbl" style="flex:1">Collection lock timeout</div>
+          <select class="s-sel" id="s-lock">
+            <option value="120">2 minutes</option>
+            <option value="600">10 minutes</option>
+            <option value="1800">30 minutes</option>
+            <option value="3600">1 hour</option>
+          </select>
         </div>
       </div>
-    </div><!-- /col-right -->
 
-  </div><!-- /body-cols -->
-
-  <!-- Info popover -->
-  <div id="info-popover" class="hidden">
-    <div class="info-pop-title">Zing Features</div>
-    <div class="info-feat"><span class="info-feat-name">URL Zone</span><span class="info-feat-desc">Save, organize &amp; open URL collections</span></div>
-    <div class="info-feat"><span class="info-feat-name">Dark Reader</span><span class="info-feat-desc">Smart dark mode — detects if page is already dark</span></div>
-    <div class="info-feat"><span class="info-feat-name">Pesticide</span><span class="info-feat-desc">Color-coded element outlines with live class inspector</span></div>
-    <div class="info-feat"><span class="info-feat-name">Color Picker</span><span class="info-feat-desc">Magnifier color picker with HEX/RGB/HSL output</span></div>
-    <div class="info-feat"><span class="info-feat-name">JSON Prettify</span><span class="info-feat-desc">Auto-detect raw JSON and render in a rich tree viewer</span></div>
-    <div class="info-feat"><span class="info-feat-name">History Scrub</span><span class="info-feat-desc">Silently scrub browser history by keyword</span></div>
-    <div class="info-feat"><span class="info-feat-name">Full Page Screenshot</span><span class="info-feat-desc">Capture &amp; download entire web pages as PNG</span></div>
-    <div class="info-feat"><span class="info-feat-name">BuiltWith</span><span class="info-feat-desc">Detect the tech stack of any website</span></div>
-    <div class="info-feat"><span class="info-feat-name">Save Tabs</span><span class="info-feat-desc">One-click save all current tabs into a collection</span></div>
-    <div class="info-feat"><span class="info-feat-name">WhatFont</span><span class="info-feat-desc">Inspect font details by selecting any text</span></div>
-  </div>
-
-  <!-- Settings popover -->
-  <div id="settings-popover" class="hidden">
-    <div style="flex:1" id="settings-backdrop"></div>
-    <div class="settings-panel">
-      <div class="settings-header">
-        <span class="settings-title">Settings</span>
-        <button class="icon-btn" id="btn-settings-close" title="Close">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
-      <div class="settings-body">
-
-        <!-- JSON Prettify section -->
-        <div class="settings-section">
-          <div class="settings-section-title">JSON Prettify</div>
-          <div class="setting-row">
-            <div class="setting-info">
-              <div class="setting-label">Enable by default</div>
-              <div class="setting-desc">Auto-redirect JSON pages to the tree viewer</div>
-            </div>
-            <label class="ts" title="Enable JSON Prettify by default">
-              <input type="checkbox" id="s-json-default" />
-              <div class="ts-track"><div class="ts-thumb"></div></div>
-            </label>
-          </div>
+      <!-- Date & Time -->
+      <div class="s-sec">
+        <div class="s-stl">Date &amp; Time</div>
+        <div class="s-row">
+          <div><div class="s-lbl">Use system settings</div><div class="s-desc">OS locale for time &amp; date formatting</div></div>
+          <input type="checkbox" class="s-cb" id="s-dt-sys" checked/>
         </div>
-
-        <!-- Date & Time section -->
-        <div class="settings-section">
-          <div class="settings-section-title">Date &amp; Time</div>
-          <div class="setting-row">
-            <div class="setting-info">
-              <div class="setting-label">Use system settings</div>
-              <div class="setting-desc">Use your OS locale for formatting</div>
-            </div>
-            <input type="checkbox" class="setting-checkbox" id="s-dt-system" checked />
-          </div>
-          <div id="s-dt-custom" style="display:none">
-            <div class="setting-row">
-              <div class="setting-info">
-                <div class="setting-label">Timezone</div>
-              </div>
-              <select class="setting-select" id="s-dt-timezone">
-                <option value="UTC">UTC</option>
-                <option value="America/New_York">New York (ET)</option>
-                <option value="America/Chicago">Chicago (CT)</option>
-                <option value="America/Denver">Denver (MT)</option>
-                <option value="America/Los_Angeles">Los Angeles (PT)</option>
-                <option value="Europe/London">London (GMT/BST)</option>
-                <option value="Europe/Paris">Paris (CET)</option>
-                <option value="Europe/Berlin">Berlin (CET)</option>
-                <option value="Asia/Kolkata">Mumbai (IST)</option>
-                <option value="Asia/Tokyo">Tokyo (JST)</option>
-                <option value="Asia/Shanghai">Shanghai (CST)</option>
-                <option value="Asia/Singapore">Singapore (SGT)</option>
-                <option value="Australia/Sydney">Sydney (AEST)</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info">
-                <div class="setting-label">Clock format</div>
-              </div>
-              <select class="setting-select" id="s-dt-hour">
-                <option value="24">24-hour</option>
-                <option value="12">12-hour (AM/PM)</option>
-              </select>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info">
-                <div class="setting-label">Date format</div>
-              </div>
-              <select class="setting-select" id="s-dt-datefmt">
-                <option value="D MMM YYYY">25 Apr 2026</option>
-                <option value="MMM D YYYY">Apr 25 2026</option>
-                <option value="YYYY-MM-DD">2026-04-25</option>
-                <option value="DD/MM/YYYY">25/04/2026</option>
-                <option value="MM/DD/YYYY">04/25/2026</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- History Scrub section -->
-        <div class="settings-section">
-          <div class="settings-section-title">History Scrub</div>
-          <div class="setting-row">
-            <div class="setting-info">
-              <div class="setting-label">Scrub frequency</div>
-              <div class="setting-desc">How often to auto-scrub history</div>
-            </div>
-            <select class="setting-select" id="s-scrub-freq">
-              <option value="startup">On startup</option>
-              <option value="1min">Every 1 minute</option>
-              <option value="5min">Every 5 minutes</option>
-              <option value="15min">Every 15 minutes</option>
-              <option value="1hour">Every 1 hour</option>
-              <option value="6hours">Every 6 hours</option>
+        <div id="s-dt-cust">
+          <div class="s-row"><div class="s-lbl" style="flex:1">Timezone</div>
+            <select class="s-sel" id="s-dt-tz">
+              <option value="UTC">UTC</option>
+              <option value="America/New_York">New York (ET)</option>
+              <option value="America/Chicago">Chicago (CT)</option>
+              <option value="America/Los_Angeles">Los Angeles (PT)</option>
+              <option value="Europe/London">London (GMT)</option>
+              <option value="Europe/Paris">Paris (CET)</option>
+              <option value="Asia/Kolkata">Mumbai (IST)</option>
+              <option value="Asia/Tokyo">Tokyo (JST)</option>
+              <option value="Asia/Singapore">Singapore (SGT)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
             </select>
           </div>
-          <div class="scrub-words-area">
-            <div class="setting-label" style="margin-bottom:6px;font-size:11px">Keywords to scrub</div>
-            <div class="scrub-tags" id="s-scrub-tags"></div>
-            <div class="scrub-add-row">
-              <input class="scrub-add-input" id="s-scrub-input" type="text" placeholder="Add keyword…" />
-              <button class="scrub-add-btn" id="s-scrub-add">Add</button>
-            </div>
+          <div class="s-row"><div class="s-lbl" style="flex:1">Clock format</div>
+            <select class="s-sel" id="s-dt-hr"><option value="24">24-hour</option><option value="12">12-hour AM/PM</option></select>
+          </div>
+          <div class="s-row"><div class="s-lbl" style="flex:1">Date format</div>
+            <select class="s-sel" id="s-dt-fmt">
+              <option value="D MMM YYYY">25 Apr 2026</option>
+              <option value="MMM D YYYY">Apr 25 2026</option>
+              <option value="YYYY-MM-DD">2026-04-25</option>
+              <option value="DD/MM/YYYY">25/04/2026</option>
+              <option value="MM/DD/YYYY">04/25/2026</option>
+            </select>
           </div>
         </div>
-
-        <div class="settings-save-row">
-          <button class="settings-save-btn" id="btn-settings-save">Save Settings</button>
-        </div>
-
       </div>
+
     </div>
   </div>
+</div>
 
-  <script src="popup.js"></script>
+
+<!-- BuiltWith slide panel -->
+<div id="bw-slide" class="h">
+  <div style="flex:1" id="bw-bd"></div>
+  <div class="bw-panel">
+    <div class="bw-phdr">
+      <div>
+        <div class="bw-ptitle">BuiltWith</div>
+        <div class="bw-pdom" id="bw-pdom">Tech stack analysis</div>
+      </div>
+      <button class="ibtn" id="bw-close" title="Close">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="bw-pbody" id="bw-panel"></div>
+  </div>
+</div>
+
+<script src="popup.js"></script>
 </body>
 </html>
+             
