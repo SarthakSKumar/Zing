@@ -17,6 +17,7 @@ const state = {
 };
 
 let pollTimer = null;
+let softRefreshTimer = null;
 
 // ─── DOM REFS ─────────────────────────────────────────────────────────────────
 
@@ -159,6 +160,52 @@ function stopOgPoll() {
     clearInterval(pollTimer);
     pollTimer = null;
   }
+}
+
+// ─── SOFT REFRESH — auto-detects lock state changes & new collections ─────────
+
+function collectionsChanged(oldCols, newCols) {
+  if (!oldCols || oldCols.length !== newCols.length) return true;
+  for (let i = 0; i < newCols.length; i++) {
+    const o = oldCols.find(c => c.id === newCols[i].id);
+    if (!o) return true;
+    // Check lock state change (the important one for the 2-minute lock countdown)
+    if (o.locked !== newCols[i].locked) return true;
+    if (o.unlocked !== newCols[i].unlocked) return true;
+    // Check name / URL count changes
+    if (o.name !== newCols[i].name) return true;
+    if (o.urls.length !== newCols[i].urls.length) return true;
+  }
+  return false;
+}
+
+async function startSoftRefresh() {
+  if (softRefreshTimer) clearInterval(softRefreshTimer);
+  // Read interval from settings (default 30s)
+  let intervalMs = 30_000;
+  try {
+    const s = await GET("/api/settings");
+    if (s?.softRefreshInterval) intervalMs = s.softRefreshInterval * 1000;
+  } catch {}
+  softRefreshTimer = setInterval(async () => {
+    try {
+      const cols = await GET("/api/collections");
+      if (collectionsChanged(state.collections, cols)) {
+        state.collections = cols;
+        renderSidebar();
+        renderColPickerDropdown();
+        if (state.activeId) {
+          const col = cols.find(c => c.id === state.activeId);
+          if (col && !col.locked) {
+            renderCollectionContent(col);
+          } else if (!col) {
+            state.activeId = null;
+            showView("empty");
+          }
+        }
+      }
+    } catch {}
+  }, intervalMs);
 }
 
 // ─── DATA LOAD ────────────────────────────────────────────────────────────────
@@ -1334,7 +1381,6 @@ async function init() {
   dom.btnGrid?.classList.remove("active");
   syncPrivateBtn();
   try {
-    await POST("/api/locks/reset-all", {});
     await loadAll();
     if (state.collections.length && !state.activeId) {
       const first = state.collections.find((c) => !c.locked || c.unlocked);
@@ -1344,6 +1390,7 @@ async function init() {
       state.collections.some((c) => c.urls.some((u) => u.og_fetched === false))
     )
       startOgPoll();
+    startSoftRefresh();
   } catch (err) {
     toast(`Failed to load: ${err.message}`, "error");
   }
