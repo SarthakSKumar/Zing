@@ -592,8 +592,7 @@ DEFAULT_SETTINGS = {
     },
     "historyScrub": {
         "enabled": True,
-        "words": ["porn", "desi", "xxx", "sex", "fuck", "milf", "pornhub",
-                  "xvideos", "missionary", "eporner", "hardcore"],
+        "words": ["dangerous"],
         "frequency": "startup"
     },
     "collectionLockTimeout": 120,
@@ -817,8 +816,7 @@ DEFAULT_SETTINGS = {
     },
     "historyScrub": {
         "enabled": True,
-        "words": ["porn", "desi", "xxx", "sex", "fuck", "milf", "pornhub",
-                  "xvideos", "missionary", "eporner", "hardcore"],
+        "words": ["dangerous"],
         "frequency": "startup"
     },
     "collectionLockTimeout": 120,
@@ -854,7 +852,6 @@ def _save_settings(settings: dict) -> None:
     with open(tmp, 'w', encoding='utf-8') as f:
         json.dump(settings, f, indent=2)
     os.replace(tmp, SETTINGS_FILE)
-
 
 
 if __name__ == "__main__":
