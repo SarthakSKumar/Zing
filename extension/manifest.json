@@ -24,12 +24,12 @@
       "run_at": "document_start",
       "exclude_matches": ["http://localhost:5000/*", "http://127.0.0.1:5000/*"]
     },
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js", "font-picker.js"],
-      "run_at": "document_idle",
-      "exclude_matches": ["http://localhost:5000/*", "http://127.0.0.1:5000/*"]
-    },
+ {
+  "matches": ["<all_urls>"],
+  "js": ["content.js", "font-picker.js"],
+  "run_at": "document_idle",
+  "exclude_matches": ["http://localhost:5000/*", "http://127.0.0.1:5000/*"]
+},
     {
       "matches": ["<all_urls>"],
       "js": ["json-detector.js"],

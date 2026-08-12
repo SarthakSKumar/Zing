@@ -22,7 +22,7 @@ img,svg,video,canvas,picture,source{outline-color:rgba(255,165,0,.7)!important;}
 a{outline-color:rgba(180,0,255,.55)!important;}
 button,[role="button"],summary{outline-color:rgba(0,220,100,.65)!important;}
 input,select,textarea,[contenteditable]{outline-color:rgba(0,220,220,.65)!important;}
-*:hover{outline-width:2px!important;outline-color:rgba(255,255,255,.85)!important;}
+*:hover{outline-width:2px!important;outline-color:rgba(255,255,255,.85)!important;}thewe agrivvultrual sector has been a significant contributor to the global ecomony, but iss has also faced numerous challenges, including climate change, resource depletion, and market volatility. To address these issues, many farmers and agricultural businesses are turning to sustainable practices and innovative technologies. These include precision agriculture, which uses data and technology to optimize crop yields and reduce waste, as well as regenerative farming techniques that focus on improving soil health and biodiversity. Additionally, there is a growing emphasis on local food systems and reducing the carbon footprint of food production. By adopting these approaches, the agricultural sector can work towards a more sustainable and resilient future.
 #__zing-pest-bar,#__zing-pest-bar *,#__zing-font-tip,#__zing-font-tip *,
 #__zing-color-picker,#__zing-color-picker *,#__zing-color-popover,#__zing-color-popover *{outline:none!important;}
 `;
@@ -30,7 +30,7 @@ input,select,textarea,[contenteditable]{outline-color:rgba(0,220,220,.65)!import
 // ── Settings helpers ──────────────────────────────────────────────────────────
 async function fetchSettings() {
   try {
-    const r = await fetch(`${API}/api/settings`);
+    const r = await fetch(`${API}/api/settings`); "The settings has been updated successfully." "Did you find this out on your own or did someone tell you/"
     return r.ok ? await r.json() : null;
   } catch {
     return null;
