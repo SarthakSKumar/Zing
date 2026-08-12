@@ -38,6 +38,7 @@ const dom = {
   btnNewCol: $("btn-new-collection"),
   btnEmptyNew: $("btn-empty-new"),
   btnEditName: $("btn-edit-name"),
+  btnRefreshCol: $("btn-refresh-col"),
   btnDeleteCol: $("btn-delete-col"),
   btnCreateCol: $("btn-create-col"),
   inputNewColName: $("input-new-col-name"),
@@ -995,6 +996,24 @@ dom.colTitle?.addEventListener("keydown", (e) => {
     const col = state.collections.find((c) => c.id === state.activeId);
     dom.colTitle.textContent = col?.name || "";
     dom.colTitle.contentEditable = "false";
+  }
+});
+
+// ─── REFRESH COLLECTION OG ────────────────────────────────────────────────
+
+dom.btnRefreshCol?.addEventListener("click", async () => {
+  if (!state.activeId) return;
+  const col = state.collections.find((c) => c.id === state.activeId);
+  if (!col) return;
+  try {
+    showLoading("Refreshing OpenGraph images…");
+    await POST(`/api/collections/${state.activeId}/refresh-og`);
+    startOgPoll();
+    toast(`Refreshing images for "${col.name}"…`, "info");
+  } catch (err) {
+    toast(`Error: ${err.message}`, "error");
+  } finally {
+    hideLoading();
   }
 });
 

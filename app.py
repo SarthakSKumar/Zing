@@ -14,7 +14,6 @@ from bs4 import BeautifulSoup
 from flask import Flask, jsonify, render_template, request, abort
 
 app = Flask(__name__)
-
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 DATA_FILE = os.path.join(DATA_DIR, "bookmarks.json")
 BRAVE_PATH = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
@@ -112,14 +111,34 @@ def _fetch_og(url: str) -> dict:
             else (soup.title.string.strip() if soup.title else parsed.netloc)
         )
 
-        og_img = soup.find("meta", property="og:image")
-        if og_img and og_img.get("content"):
-            img_url = og_img["content"].strip()
+        # Preferred image meta tags (highest priority first)
+        image_selectors = [
+            ("property", "og:image"),
+            ("property", "og:image:url"),
+            ("property", "og:image:secure_url"),
+            ("name", "twitter:image"),
+            ("name", "twitter:image:src"),
+            ("itemprop", "image"),
+        ]
+
+        for attr, value in image_selectors:
+            tag = soup.find("meta", attrs={attr: value})
+            if not tag:
+                continue
+
+            img_url = (tag.get("content") or "").strip()
+            if not img_url:
+                continue
+
             if img_url.startswith("//"):
                 img_url = parsed.scheme + ":" + img_url
             elif img_url.startswith("/"):
                 img_url = origin + img_url
+            elif not img_url.startswith(("http://", "https://")):
+                img_url = origin + "/" + img_url.lstrip("/")
+
             meta["og_image"] = img_url
+            break
 
         og_desc = soup.find("meta", property="og:description")
         if og_desc and og_desc.get("content"):
@@ -154,7 +173,7 @@ def _process_og_item(cid: str, url_id: str) -> None:
     if not col:
         return
     entry = next((u for u in col["urls"] if u["id"] == url_id), None)
-    if not entry or entry.get("og_fetched") is not False:
+    if not entry:
         return
 
     url_to_fetch = entry["url"]
@@ -175,6 +194,21 @@ def _process_og_item(cid: str, url_id: str) -> None:
         entry["description"] = meta["description"]
         entry["og_fetched"] = True
         _write_file(data)
+
+
+def _queue_collection_og_items(cid: str) -> None:
+    """Queue OG refresh for every URL in a collection."""
+    data = _load()
+    col = _find_collection(data, cid)
+    if not col:
+        return
+    for entry in col.get("urls", []):
+        url = (entry.get("url") or "").strip()
+        if not url:
+            continue
+        entry["og_fetched"] = False
+        og_queue.put((cid, entry["id"]))
+    _save(data)
 
 
 def _og_worker() -> None:
@@ -397,6 +431,16 @@ def delete_collection(cid: str):
 # ---------------------------------------------------------------------------
 # Routes — URLs
 # ---------------------------------------------------------------------------
+
+@app.route("/api/collections/<cid>/refresh-og", methods=["POST"])
+def refresh_collection_og(cid: str):
+    data = _load()
+    col = _find_collection(data, cid)
+    if not col:
+        abort(404)
+    _queue_collection_og_items(cid)
+    return jsonify({"ok": True, "queued": len(col.get("urls", []))})
+
 
 @app.route("/api/collections/<cid>/urls", methods=["POST"])
 def add_urls(cid: str):
