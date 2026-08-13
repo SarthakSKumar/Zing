@@ -25,7 +25,6 @@
       return false;
     }
   }
-the function executed here is not a part of the extension, but it is used to get the icon url for the tooltip. It checks if the runtime is alive and then tries to get the URL of the icon. If it fails, it returns null.
   function getIconUrl() {
     if (!isRuntimeAlive()) return null;
     try {
